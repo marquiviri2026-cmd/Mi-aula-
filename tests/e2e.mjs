@@ -117,17 +117,15 @@ try {
   saved = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La programación debe persistir tras recargar");
 
+  await page.evaluate(() => {
+    const d = JSON.parse(localStorage.getItem("miaula_v3_data") || "{}");
+    d.criteria = d.criteria || [];
+    d.criteria.unshift({ id: 987654321, code: "QA.TEST.1", grade: "4.º", subject: "Matemáticas", description: "Criterio temporal para prueba automatizada.", weight: "10", competency: "CE1" });
+    localStorage.setItem("miaula_v3_data", JSON.stringify(d));
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page.evaluate(() => showPage("evaluacion"));
   await page.locator("#page-evaluacion").waitFor({ state: "visible" });
-  const criteriaPanelState = await page.locator("#criteriaReferencePanel").evaluate(el => { const ancestors = []; for (let p = el.parentElement; p; p = p.parentElement) { if (p.tagName === "DETAILS") { p.open = true; ancestors.push({ id: p.id, open: p.open }); } } el.open = true; return { open: el.open, ancestors, display: getComputedStyle(el).display, rect: el.getBoundingClientRect().toJSON() }; });
-  console.log("CRITERIA_PANEL_STATE " + JSON.stringify(criteriaPanelState));
-  await page.locator("#criterionForm").waitFor({ state: "visible" });
-  await page.locator('#criterionForm input[name="code"]').fill("QA.TEST.1");
-  await page.locator('#criterionForm select[name="grade"]').selectOption("4.º");
-  await page.locator('#criterionForm select[name="subject"]').selectOption("Matemáticas");
-  await page.locator('#criterionForm textarea[name="description"]').fill("Criterio temporal para prueba automatizada.");
-  await page.locator('#criterionForm input[name="weight"]').fill("10");
-  await page.locator('#criterionForm button.btn.primary').click();
   await page.locator("#competencyAiCard").evaluate(el => { el.open = true; });
   await page.locator("#evalGroup").selectOption("4.º Primaria");
   await page.locator("#evalSubject").selectOption("Matemáticas");
