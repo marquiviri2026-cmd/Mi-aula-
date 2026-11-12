@@ -240,7 +240,7 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 <div class="grid" id="assessmentSummary">
 <div class="card"><div class="muted">Evidencias registradas</div><div class="metric" id="evCount">0</div><div class="helper">De la selección actual</div></div>
 <div class="card"><div class="muted">Alumnado evaluado</div><div class="metric" id="evStudents">0</div><div class="helper">Códigos con evidencias</div></div>
-<div class="card"><div class="muted">Media provisional</div><div class="metric" id="evAverage">—</div><div class="helper">Solo con criterios valorados</div></div>
+<div class="card"><div class="muted">Media provisional</div><div class="metric" id="evAverage">—</div><div class="helper">Media de notas registradas; no equivale a la nota competencial</div></div>
 <div class="card"><div class="muted">Criterios valorados</div><div class="metric" id="evCriteria">0</div><div class="helper">Con evidencias vinculadas</div></div>
 </div>
 <details class="card section" id="registerEvidencePanel">
@@ -376,11 +376,15 @@ const group=historyGroup.value,subject=historySubject.value,term=historyTerm.val
 const codeFilter=(evalStudentSearch.value||'').trim().toLowerCase();
 const groupAliases=group==='1.º y 2.º Primaria'?['1.º y 2.º Primaria']:group==='4.º Primaria'?['4.º Primaria','4.º, 5.º y 6.º Primaria']:['5.º y 6.º Primaria','4.º, 5.º y 6.º Primaria'];
 const records=(data.grades||[]).filter(x=>groupAliases.includes(x.group)&&x.subject===subject&&x.term===term&&(!codeFilter||String(x.student||'').toLowerCase().includes(codeFilter)));
-const students=[...new Set(records.map(x=>x.student))];
-const criteria=getCriteria();const finals=students.map(student=>studentFinal(student,records,criteria)).filter(v=>v!==null);const average=finals.length?finals.reduce((a,b)=>a+b,0)/finals.length:null;
+const students=[...new Set(records.map(x=>String(x.student||'').trim()).filter(Boolean))];
+const criteria=getCriteria();
+const assessments=(data.competencyAssessments||[]).filter(a=>students.includes(String(a.student||'').trim())&&a.subject===subject&&a.term===term&&(a.group===group||(group==='4.º Primaria'&&a.group==='4.º Primaria')||(group==='5.º y 6.º Primaria'&&a.group==='5.º y 6.º Primaria')));
+const scoredEvidence=records.filter(x=>x.score!==''&&x.score!=null&&Number.isFinite(Number(x.score)));
+const average=scoredEvidence.length?scoredEvidence.reduce((sum,x)=>sum+Number(x.score),0)/scoredEvidence.length:null;
 evCount.textContent=records.length;evStudents.textContent=students.length;evAverage.textContent=average===null?'—':average.toFixed(2);
-const used=criteria.filter(c=>records.some(r=>String(r.criterion)===String(c.id)));
-evCriteria.textContent=used.length;
+const usedIds=new Set(criteria.filter(c=>records.some(r=>String(r.criterion)===String(c.id))).map(c=>String(c.code)));
+assessments.forEach(a=>(a.criteria||[]).forEach(c=>{if(c.score!==null&&c.score!==undefined)usedIds.add(String(c.code))}));
+evCriteria.textContent=usedIds.size;
 criteriaList.innerHTML=criteria.map(c=>'<div class="rowitem"><div><b>'+esc(c.code)+' · '+esc(c.grade)+'</b><div class="helper">'+esc(c.description)+'</div><div class="muted">'+esc(c.competency||'')+' · Peso relativo '+esc(c.weight)+(c.official?' · Catálogo oficial':'')+'</div></div>'+(c.official?'<span class="muted">Oficial</span>':'<button class="btn small danger" onclick="deleteCriterion('+c.id+')">Eliminar</button>')+'</div>').join('')||'<div class="empty">No hay criterios para esta selección.</div>';
 evidenceCriterion.innerHTML='<option value="">Sin vincular (pendiente)</option>'+(data.criteria||[]).filter(c=>c.subject===gradeForm.subject.value).map(c=>'<option value="'+c.id+'">'+esc(c.code)+' · '+esc(c.description.slice(0,90))+'</option>').join('');
 evalOverview.innerHTML=criteria.map(c=>{const ev=records.filter(r=>String(r.criterion)===String(c.id));const avg=weighted(ev);return '<div class="rowitem"><div style="flex:1"><b>'+esc(c.code)+'</b><div class="helper">'+esc(c.description)+'</div><div class="muted">'+ev.length+' evidencia(s) · Peso '+esc(c.weight)+'%</div></div><b>'+(avg===null?'Sin valorar':avg.toFixed(2)+'/10')+'</b></div>'}).join('')||'<div class="empty">Añade primero los criterios oficiales del área y ciclo. Después podrás vincular cada control y anotación.</div>';
@@ -389,6 +393,7 @@ evalOverview.innerHTML+='<h3 style="font-size:14px;margin:20px 0 10px">Calificac
 gradesList.innerHTML=records.length?'<div class="tablewrap"><table><tr><th>Alumno</th><th>Evidencia</th><th>Criterio</th><th>Nota</th><th>Fecha</th><th></th></tr>'+records.map(x=>{const c=(data.criteria||[]).find(q=>String(q.id)===String(x.criterion));return '<tr><td>'+esc(x.student)+'</td><td>'+esc(x.kind||x.evidence)+'<div class="muted">'+esc(x.notes)+'</div></td><td>'+esc(c?c.code:'Pendiente')+'</td><td>'+(x.score===''||x.score==null?'—':Number(x.score).toFixed(1))+'</td><td>'+esc(x.date)+'</td><td><button class="btn small danger" onclick="del(\'grades\','+x.id+')">×</button></td></tr>'}).join('')+'</table></div>':'<div class="empty">No hay evidencias para esta selección.</div>';
 }
 function deleteCriterion(id){if(confirm('¿Eliminar este criterio? Las evidencias ya registradas se conservarán, pero quedarán sin vincular.')){data.criteria=(data.criteria||[]).filter(c=>c.id!==id);save()}}
+const historyGroup=document.getElementById('historyGroup'),historySubject=document.getElementById('historySubject'),historyTerm=document.getElementById('historyTerm'),evalStudentSearch=document.getElementById('evalStudentSearch');
 criterionForm.addEventListener('submit',e=>{e.preventDefault();data.criteria=data.criteria||[];data.criteria.unshift({id:Date.now(),...formData(criterionForm)});criterionForm.reset();save()});
 [historyGroup,historySubject,historyTerm].forEach((x,i)=>x.addEventListener('change',()=>{[evalGroup,evalSubject,evalTerm][i].value=x.value;renderGrades()}));
 evalStudentSearch.addEventListener('input',renderGrades);
@@ -411,7 +416,7 @@ savePendingEvidence.onclick=()=>{
 };
 interpretEvidence.onclick=async()=>{const note=evidenceNotes.value.trim(),token=aiAccessToken.value.trim();if(!note){aiEvidenceStatus.textContent='Escribe primero una anotación.';return}if(!token){aiEvidenceStatus.textContent='Introduce el código privado en el apartado Asistente IA.';return}interpretEvidence.disabled=true;aiEvidenceStatus.textContent='Analizando la evidencia…';aiEvidenceProposal.classList.remove('hidden');aiEvidenceProposal.textContent='La IA está relacionando la observación con los criterios disponibles.';try{const cs=(data.criteria||[]).filter(c=>c.subject===gradeForm.subject.value);const prompt='Analiza esta anotación docente de Educación Primaria para evaluación formativa y competencial en Extremadura. Materia: '+gradeForm.subject.value+'. Grupo: '+gradeForm.group.value+'. Tipo de evidencia: '+gradeForm.kind.value+'. Criterios oficiales disponibles (si los hay): '+JSON.stringify(cs.map(c=>({id:c.id,code:c.code,description:c.description,grade:c.grade})))+'. Anotación: '+note+'. Devuelve una propuesta breve con: criterio relacionado (código exacto o "no identificable"), qué evidencia observable aporta, nivel de desempeño (inicial/en desarrollo/adecuado/avanzado), nota orientativa 0-10 SOLO si la anotación aporta evidencia suficiente; si no, escribe "sin nota suficiente", y qué evidencia adicional convendría recoger. No inventes información ni conviertas esfuerzo, conducta o asistencia en nota de aprendizaje. Termina con "PROPUESTA NUMÉRICA: X/10" o "PROPUESTA NUMÉRICA: SIN DATOS".';const r=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json','X-MIAULA-TOKEN':token},body:JSON.stringify({prompt,history:[]})});const j=await r.json();if(!r.ok)throw Error(j.error||'No se pudo analizar');aiEvidenceProposal.textContent=j.answer;const m=j.answer.match(/PROPUESTA NUMÉRICA:\s*(\d+(?:[.,]\d+)?)\s*\/\s*10/i);if(m){gradeForm.score.value=String(Math.max(0,Math.min(10,Number(m[1].replace(',','.')))));aiEvidenceStatus.textContent='Propuesta numérica cargada como borrador. Revísala antes de guardar.'}else aiEvidenceStatus.textContent='La IA no ha encontrado base suficiente para proponer una nota. Revisa su análisis.'}catch(err){aiEvidenceStatus.textContent='Error: '+err.message;aiEvidenceProposal.textContent='No se ha podido analizar la anotación.'}finally{interpretEvidence.disabled=false}};
 
-const historyGroup=document.getElementById('historyGroup'),historySubject=document.getElementById('historySubject'),historyTerm=document.getElementById('historyTerm'),evalStudentSearch=document.getElementById('evalStudentSearch');
+
 const competencyStudent=document.getElementById('competencyStudent');
 const runCompetencyAssessment=document.getElementById('runCompetencyAssessment');
 const competencyStatus=document.getElementById('competencyStatus');
