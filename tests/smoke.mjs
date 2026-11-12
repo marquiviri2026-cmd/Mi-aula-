@@ -29,6 +29,12 @@ for (const route of ["assistant", "library", "library-search", "competency-evalu
   assert.ok(html.includes("/api/" + route), "La interfaz no referencia /api/" + route);
 }
 
+assert.ok(html.includes('data-page="examenes"'), "Falta la navegación de exámenes");
+assert.ok(html.includes('id="examForm"'), "Falta el formulario de exámenes");
+assert.ok(html.includes("function recordExamResult"), "Falta el registro de notas individuales");
+assert.ok(html.includes("examId:exam.id"), "La evidencia debe quedar vinculada al examen");
+assert.ok(html.includes("function renderExams"), "Falta el renderizado del historial de exámenes");
+
 assert.ok(Array.isArray(catalog.criteria) && catalog.criteria.length > 0, "El catálogo curricular debe tener criterios");
 const subjects = new Set(catalog.criteria.map((item) => item.subject));
 const cycles = new Set(catalog.criteria.map((item) => item.grade));
