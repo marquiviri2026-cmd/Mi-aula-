@@ -119,7 +119,8 @@ try {
 
   await page.evaluate(() => showPage("evaluacion"));
   await page.locator("#page-evaluacion").waitFor({ state: "visible" });
-  await page.locator("#criteriaReferencePanel > summary").click();
+  await page.locator("#criteriaReferencePanel").evaluate(el => { el.open = true; });
+  await page.locator("#criterionForm").waitFor({ state: "visible" });
   await page.locator('#criterionForm input[name="code"]').fill("QA.TEST.1");
   await page.locator('#criterionForm select[name="grade"]').selectOption("4.º");
   await page.locator('#criterionForm select[name="subject"]').selectOption("Matemáticas");
