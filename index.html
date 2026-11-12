@@ -240,6 +240,7 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 <section class="page" id="page-agenda"><div class="toolbar"><div class="helper">Calendario mensual y listado de actividades, reuniones, tareas y evaluaciones.</div><button class="btn primary" onclick="openForm('eventForm')">＋ Nueva actividad</button></div><div class="card"><form id="eventForm" class="formgrid hidden" style="margin-bottom:16px"><div class="field"><label>Título</label><input name="title" required placeholder="Reunión de ciclo"></div><div class="field"><label>Fecha</label><input name="date" type="date" required></div><div class="field"><label>Hora</label><input name="time" type="time"></div><div class="field"><label>Tipo</label><select name="type"><option>Clase</option><option>Reunión</option><option>Tarea</option><option>Recordatorio</option><option>Evaluación</option><option>Excursión</option><option>Efeméride</option></select></div><div class="field"><label>Grupo</label><input name="group" placeholder="Todos / 5.º…"></div><div class="field"><label>Notas</label><input name="notes"></div><div class="actions field full"><button class="btn primary">Guardar actividad</button><button type="button" class="btn" onclick="closeForm('eventForm')">Cancelar</button></div></form><div class="calhead"><button class="btn" onclick="moveMonth(-1)">← Anterior</button><strong id="monthLabel"></strong><button class="btn" onclick="moveMonth(1)">Siguiente →</button></div><div id="calendar" class="calendar"></div></div><div class="card section"><h2>Listado de actividades</h2><div id="eventsList"></div></div></section>
 <section class="page" id="page-examenes">
 <div class="toolbar"><div><b>Planificación y registro de exámenes</b><div class="helper">Programa exámenes, conserva su historial y registra una evidencia individual por alumno directamente en Evaluación.</div></div><button class="btn primary" onclick="openForm('examForm')">＋ Nuevo examen</button></div>
+<div class="card"><h2>Notificaciones en este dispositivo</h2><p class="helper">Activa los avisos Push en este ordenador o móvil. Debes repetir la autorización en cada dispositivo. Los exámenes avisarán 3 días antes, 1 día antes y el mismo día; los eventos de agenda, 1 día antes.</p><div class="actions"><button class="btn primary" type="button" id="enablePushButton" onclick="enablePushNotifications()">Activar notificaciones</button></div><div class="helper" id="pushStatus" role="status" aria-live="polite" style="margin-top:10px">Notificaciones todavía no activadas en este dispositivo.</div></div>
 <div class="card"><form id="examForm" class="formgrid hidden" style="margin-bottom:16px">
 <div class="field"><label>Nombre del examen</label><input name="title" required placeholder="Control de fracciones"></div>
 <div class="field"><label>Asignatura</label><select name="subject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
@@ -420,6 +421,26 @@ function recordExamResult(examId,form){
  const previous=exam.results.find(x=>String(x.student).toLowerCase()===student.toLowerCase());
  if(previous)Object.assign(previous,{score:v.score,notes:v.notes||'',gradeId:grade.id});else exam.results.push({student,score:v.score,notes:v.notes||'',gradeId:grade.id});
  save();form.reset();alert('Resultado guardado y vinculado a Evaluación.');
+}
+function base64UrlToBytes(value){const padding='='.repeat((4-value.length%4)%4);const base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(base64),c=>c.charCodeAt(0))}
+async function enablePushNotifications(){
+ const button=document.getElementById('enablePushButton'),status=document.getElementById('pushStatus');
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){status.textContent='Este navegador o modo de apertura no admite notificaciones Push. En iPhone, abre MI AULA desde el icono de la pantalla de inicio.';return}
+ if(!currentAccount){status.textContent='Inicia sesión antes de activar las notificaciones.';return}
+ button.disabled=true;status.textContent='Solicitando permiso de notificaciones…';
+ try{
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted')throw new Error('No se ha concedido permiso de notificaciones.');
+  const reg=await navigator.serviceWorker.ready;
+  const keyResponse=await fetch('/api/push/public-key',{credentials:'same-origin',cache:'no-store'});
+  const keyJson=await keyResponse.json();if(!keyResponse.ok)throw new Error(keyJson.error||'No se pudo obtener la clave Push.');
+  let subscription=await reg.pushManager.getSubscription();
+  if(!subscription)subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToBytes(keyJson.publicKey)});
+  const response=await fetch('/api/push/subscribe',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:subscription.toJSON()})});
+  const result=await response.json();if(!response.ok)throw new Error(result.error||'No se pudo guardar la suscripción.');
+  status.textContent='Notificaciones activadas en este dispositivo. Recibirás los recordatorios programados.';
+ }catch(error){status.textContent='No se pudo activar: '+(error?.message||'error desconocido')}
+ finally{button.disabled=false}
 }
 function renderExams(){
  const host=document.getElementById('examsList');if(!host)return;
