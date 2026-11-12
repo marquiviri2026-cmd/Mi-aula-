@@ -25,7 +25,7 @@ export async function onRequestPost({ request, env }) {
   if (!origin || origin !== requestOrigin) return json({ error: "Origen no permitido." }, 403);
   if (!env.OPENAI_API_KEY) return json({
     code: "OPENAI_API_KEY_MISSING",
-    error: "Falta configurar OPENAI_API_KEY en Cloudflare.",
+    error: "Falta configurar OPENAI_API_KEY en Cloudflare. Diagnóstico temporal: OPENAI_API_KEY=" + (env.OPENAI_API_KEY ? "SI" : "NO") + "; MIAULA_ACCESS_TOKEN=" + (env.MIAULA_ACCESS_TOKEN ? "SI" : "NO") + "; OPENAI_VECTOR_STORE_ID=" + (env.OPENAI_VECTOR_STORE_ID ? "SI" : "NO") + "; host=" + new URL(request.url).hostname,
     diagnostic: {
       openaiApiKeyPresent: Boolean(env.OPENAI_API_KEY),
       accessTokenPresent: Boolean(env.MIAULA_ACCESS_TOKEN),
