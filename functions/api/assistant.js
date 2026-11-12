@@ -23,15 +23,17 @@ async function equalSecret(a, b) {
 export async function onRequestPost({ request, env }) {
   const origin = request.headers.get("Origin"), requestOrigin = new URL(request.url).origin;
   if (!origin || origin !== requestOrigin) return json({ error: "Origen no permitido." }, 403);
+  const runtimeBindingNames = Object.keys(env || {}).sort();
   if (!env.OPENAI_API_KEY) return json({
     code: "OPENAI_API_KEY_MISSING",
-    error: "Falta configurar OPENAI_API_KEY en Cloudflare. Diagnóstico temporal: OPENAI_API_KEY=" + (env.OPENAI_API_KEY ? "SI" : "NO") + "; MIAULA_ACCESS_TOKEN=" + (env.MIAULA_ACCESS_TOKEN ? "SI" : "NO") + "; OPENAI_VECTOR_STORE_ID=" + (env.OPENAI_VECTOR_STORE_ID ? "SI" : "NO") + "; host=" + new URL(request.url).hostname,
+    error: "Falta configurar OPENAI_API_KEY en Cloudflare. Diagnóstico temporal: OPENAI_API_KEY=" + (env.OPENAI_API_KEY ? "SI" : "NO") + "; MIAULA_ACCESS_TOKEN=" + (env.MIAULA_ACCESS_TOKEN ? "SI" : "NO") + "; OPENAI_VECTOR_STORE_ID=" + (env.OPENAI_VECTOR_STORE_ID ? "SI" : "NO") + "; host=" + new URL(request.url).hostname + "; bindings=" + runtimeBindingNames.join(","),
     diagnostic: {
       openaiApiKeyPresent: Boolean(env.OPENAI_API_KEY),
       accessTokenPresent: Boolean(env.MIAULA_ACCESS_TOKEN),
       vectorStoreIdPresent: Boolean(env.OPENAI_VECTOR_STORE_ID),
       runtime: "pages-function",
-      hostname: new URL(request.url).hostname
+      hostname: new URL(request.url).hostname,
+      availableBindingNames: runtimeBindingNames
     }
   }, 503);
   if (!env.MIAULA_ACCESS_TOKEN) return json({ code:"SERVER_TOKEN_MISSING", error:"Falta MIAULA_ACCESS_TOKEN en el entorno Preview de Cloudflare." }, 503);
