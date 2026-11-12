@@ -28,7 +28,8 @@ export async function onRequestPost({ request, env }) {
     return json({ user: { id, email } }, 201, { "Set-Cookie": session });
   } catch (error) {
     console.error("MI_AULA_REGISTER_ERROR", stage, error?.name || "Error", error?.message || "unknown");
-    return json({ error: "Fallo interno durante el registro.", stage }, 500);
+    const diagnostic = stage === "password_hash" ? { cause: error?.name || "Error", detail: error?.message || "Sin detalle" } : undefined;
+    return json({ error: "Fallo interno durante el registro.", stage, ...(diagnostic ? { diagnostic } : {}) }, 500);
   }
 }
 export async function onRequestGet() { return json({ error: "Método no permitido." }, 405); }
