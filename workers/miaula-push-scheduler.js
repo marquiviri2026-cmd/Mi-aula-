@@ -8,7 +8,7 @@ async function hkdf(ikm,salt,info,length){const prk=await hmac(salt,ikm);let t=n
 async function vapidToken(endpoint,privateJwk){
  const audience=new URL(endpoint).origin,now=Math.floor(Date.now()/1000);
  const header=b64u(textEncoder.encode(JSON.stringify({typ:"JWT",alg:"ES256"})));
- const payload=b64u(textEncoder.encode(JSON.stringify({aud:audience,exp:now+43200,sub:"mailto:mi-aula-notificaciones@example.invalid"})));
+ const payload=b64u(textEncoder.encode(JSON.stringify({aud:audience,exp:now+43200,sub:"mailto:jmerchanp01@educarex.es"})));
  const unsigned=header+"."+payload;
  const key=await crypto.subtle.importKey("jwk",JSON.parse(privateJwk),{name:"ECDSA",namedCurve:"P-256"},false,["sign"]);
  const signature=await crypto.subtle.sign({name:"ECDSA",hash:"SHA-256"},key,textEncoder.encode(unsigned));
