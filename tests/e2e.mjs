@@ -117,7 +117,8 @@ try {
   saved = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La programación debe persistir tras recargar");
 
-  await page.locator('[data-page="evaluacion"]').click();
+  await page.evaluate(() => showPage("evaluacion"));
+  await page.locator("#page-evaluacion").waitFor({ state: "visible" });
   await page.locator("#criteriaReferencePanel > summary").click();
   await page.locator('#criterionForm input[name="code"]').fill("QA.TEST.1");
   await page.locator('#criterionForm select[name="grade"]').selectOption("4.º");
