@@ -1,0 +1,32 @@
+name: Validar MI AULA
+
+on:
+  push:
+    branches:
+      - main
+      - preparacion/asistente-openai
+      - feature/examenes-notificaciones
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Comprobar sintaxis de las funciones
+        run: |
+          for file in functions/api/*.js workers/*.js; do
+            node --check "$file"
+          done
+      - name: Ejecutar pruebas de integridad
+        run: node tests/smoke.mjs

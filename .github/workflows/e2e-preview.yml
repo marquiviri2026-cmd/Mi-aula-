@@ -1,0 +1,30 @@
+name: MI AULA · Pruebas funcionales de Preview
+
+on:
+  push:
+    branches:
+      - preparacion/asistente-openai
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Probar MI AULA en Cloudflare Preview
+        env:
+          BASE_URL: https://preparacion-asistente-openai.mi-aula.pages.dev
+        run: node tests/e2e.mjs

@@ -1,0 +1,29 @@
+{
+  "id": "/",
+  "name": "MI AULA · Espacio docente",
+  "short_name": "MI AULA",
+  "description": "Tu espacio de trabajo docente",
+  "lang": "es-ES",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#f4f6fb",
+  "theme_color": "#17243a",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
