@@ -80,7 +80,7 @@ try {
   await page.locator('#groupForm input[name="count"]').fill("2");
   await page.locator('#groupForm button.btn.primary').click();
   await page.locator("#groupsList").getByText("QA · grupo temporal").waitFor();
-  await page.locator("#groupsList").getByRole("button", { name: "Eliminar" }).last().click();
+  await page.locator("#groupsList").getByRole("button", { name: "Eliminar" }).first().click();
   await page.locator("#groupsList").getByText("QA · grupo temporal").waitFor({ state: "detached" });
 
   await page.locator('[data-page="programacion"]').click();
@@ -119,12 +119,13 @@ try {
   assert.match(download.suggestedFilename(), /\.json$/i, "La copia de seguridad debe descargarse como JSON");
 
   const backup = await page.evaluate(() => localStorage.getItem("miaula_v3_data"));
-  await page.evaluate(() => { const d = JSON.parse(localStorage.getItem("miaula_v3_data")); d.events = []; localStorage.setItem("miaula_v3_data", JSON.stringify(d)); });
+  await page.evaluate(() => { const d = JSON.parse(localStorage.getItem("miaula_v3_data")); d.events = []; d.plans = []; d.grades = []; localStorage.setItem("miaula_v3_data", JSON.stringify(d)); });
   await page.locator("#importInput").setInputFiles({
     name: "mi-aula-prueba.json",
     mimeType: "application/json",
     buffer: Buffer.from(backup, "utf8")
   });
+  await page.waitForFunction(() => { const d = JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"); return d.plans?.some(x => x.title === "QA · planificación temporal") && d.grades?.some(x => x.student === "QA-01"); });
   saved = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
   assert.ok(saved.grades.some(x => x.student === "QA-01"), "La restauración debe recuperar datos de la copia");
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La restauración debe recuperar programaciones");
