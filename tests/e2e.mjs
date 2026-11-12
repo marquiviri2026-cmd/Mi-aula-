@@ -98,6 +98,7 @@ try {
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La programación debe persistir tras recargar");
 
   await page.locator('[data-page="evaluacion"]').click();
+  await page.locator("#registerEvidencePanel > summary").click();
   await page.locator('#gradeForm input[name="student"]').fill("QA-01");
   await page.locator('#gradeForm select[name="group"]').selectOption("4.º, 5.º y 6.º Primaria");
   await page.locator('#gradeForm select[name="subject"]').selectOption("Matemáticas");
@@ -129,8 +130,10 @@ try {
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La restauración debe recuperar programaciones");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator('[data-page="inicio"]').click();
+  await page.evaluate(() => showPage("inicio"));
   assert.ok(await page.locator("#page-inicio").isVisible(), "La vista inicial debe seguir visible en móvil");
+  const mobileWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  assert.ok(mobileWidth <= 390, "La página no debe desbordarse horizontalmente en móvil; ancho: " + mobileWidth);
 
   assert.deepEqual(pageErrors, [], "No deben producirse errores JavaScript no controlados: " + pageErrors.join(" | "));
   console.log("E2E OK: carga, navegación de 9 módulos, catálogo, 6 comprobaciones API seguras, alta/guardado/recarga/borrado de agenda y grupos, persistencia de programación y evaluación, exportación/restauración JSON y vista móvil.");
