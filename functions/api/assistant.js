@@ -63,7 +63,7 @@ export async function onRequestPost({ request, env }) {
     "No solicites nombres, apellidos, direcciones, diagnósticos ni otros datos identificativos de menores. Recomienda usar códigos anónimos.",
     "Para pruebas, fichas, rúbricas y materiales, estructura el resultado para que pueda copiarse e imprimirse. Si se solicita solucionario, sepáralo claramente del material del alumnado.",
     "No afirmes que has guardado, publicado o enviado archivos si no se ha realizado esa acción."
-  ].join("\\n");
+  ].join("\n");
 
   const input = [
     ...safeHistory.map(m => ({ role: m.role, content: [{ type: "input_text", text: m.content }] })),
@@ -102,13 +102,11 @@ export async function onRequestPost({ request, env }) {
     .flatMap(item => item.content || [])
     .filter(part => part.type === "output_text")
     .map(part => part.text || "")
-    .join("\\n")
+    .join("\n")
     .trim();
 
   if (!answer) return json({ error: "La IA no ha devuelto texto. Prueba a reformular la consulta." }, 502);
   return json({ answer, model: result.model || env.OPENAI_MODEL || "gpt-4.1-mini" });
 }
 
-export async function onRequest({ request }) {
-  if (request.method !== "POST") return json({ error: "Método no permitido." }, 405);
-}
+export async function onRequestGet() { return json({ error: "Método no permitido." }, 405); }
