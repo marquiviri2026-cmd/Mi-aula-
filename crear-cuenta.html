@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f4f6fb">
-<title>Crear cuenta · MI AULA</title>
+<title>Acceder · MI AULA</title>
 <style>
 *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px;background:#f4f6fb;color:#183153;font:16px system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center}.card{width:min(100%,520px);background:#fff;border-radius:24px;padding:34px;box-shadow:0 18px 50px #172b4d20}h1{font-size:30px;margin:10px 0}p{color:#66758b;line-height:1.5}.brand{font-size:14px;letter-spacing:2px;font-weight:800;color:#4165d8}label{display:block;font-size:14px;font-weight:700;margin:18px 0 7px}input{width:100%;padding:16px;border:1px solid #d7dfed;border-radius:13px;font:inherit}button{width:100%;margin-top:22px;padding:15px;border:0;border-radius:12px;background:#4165dc;color:white;font-weight:700;font-size:16px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}#status{min-height:48px;margin-top:16px;font-size:14px;overflow-wrap:anywhere}.back{display:block;margin-top:18px;color:#315bd0}
 </style>
@@ -12,16 +12,15 @@
 <body>
 <main class="card">
 <div class="brand">MI AULA · ESPACIO DOCENTE</div>
-<h1>Crear cuenta</h1>
-<p>Registra tu nueva cuenta privada para acceder a MI AULA.</p>
+<h1>Acceder a MI AULA</h1>
+<p>Tu cuenta ya está creada. Introduce la contraseña que elegiste al registrarte.</p>
 <form id="registerForm">
 <label for="email">Correo electrónico</label>
 <input id="email" name="email" type="email" value="jaimemervhan@gmail.com" autocomplete="username" required>
-<label for="password">Crea una contraseña (mínimo 12 caracteres)</label>
+<label for="password">Tu contraseña</label>
 <input id="password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
-<label for="confirm">Repite la contraseña</label>
-<input id="confirm" name="confirm" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
-<button id="submit" type="submit">Crear mi cuenta</button>
+
+<button id="submit" type="submit">Entrar en MI AULA</button>
 </form>
 <div id="status" role="status" aria-live="polite"></div>
 <a class="back" href="/">Volver a MI AULA</a>
@@ -32,24 +31,18 @@ form.addEventListener('submit',async event=>{
  event.preventDefault();
  const email=document.getElementById('email').value.trim().toLowerCase();
  const password=document.getElementById('password').value;
- const confirm=document.getElementById('confirm').value;
- if(password!==confirm){status.textContent='Las contraseñas no coinciden.';return;}
- if(password.length<12){status.textContent='La contraseña debe tener al menos 12 caracteres.';return;}
+ if(!password){status.textContent='Escribe tu contraseña.';return;}
  button.disabled=true;button.textContent='Creando cuenta…';status.textContent='Conectando con MI AULA…';
  try{
-  const response=await fetch('/api/auth/register',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-  const raw=await response.text();let data={};try{data=raw?JSON.parse(raw):{}}catch{}
-  if(!response.ok)throw new Error((data.error||'No se pudo crear la cuenta.')+(data.stage?' [fase: '+data.stage+']':'')+' (HTTP '+response.status+')');
-  status.textContent='Cuenta creada. Verificando el acceso…';
   const loginResponse=await fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
   const loginRaw=await loginResponse.text();let loginData={};try{loginData=loginRaw?JSON.parse(loginRaw):{}}catch{}
-  if(!loginResponse.ok)throw new Error('La cuenta se creó, pero el inicio automático falló: '+(loginData.error||'HTTP '+loginResponse.status));
+  if(!loginResponse.ok)throw new Error(loginData.error||'No se pudo iniciar sesión (HTTP '+loginResponse.status+').');
   const check=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});
   const checkData=await check.json();
-  if(!check.ok||!checkData.user)throw new Error('La cuenta existe, pero el navegador no conserva la sesión. Código de comprobación: '+check.status+'. No vuelvas a registrarte; avísame de este mensaje.');
-  status.textContent='Cuenta creada y sesión verificada. Entrando en MI AULA…';
+  if(!check.ok||!checkData.user)throw new Error('La contraseña se aceptó, pero la sesión no se conserva. Código '+check.status+'.');
+  status.textContent='Acceso confirmado. Abriendo MI AULA…';
   window.location.replace('/');
- }catch(error){status.textContent=error.message||'No se pudo conectar. Comprueba la conexión e inténtalo de nuevo.';button.disabled=false;button.textContent='Crear mi cuenta';}
+ }catch(error){status.textContent=error.message||'No se pudo conectar. Comprueba la conexión e inténtalo de nuevo.';button.disabled=false;button.textContent='Entrar en MI AULA';}
 });
 </script>
 </body>
