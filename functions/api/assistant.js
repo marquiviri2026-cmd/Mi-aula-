@@ -24,9 +24,11 @@ export async function onRequestPost({ request, env }) {
   const origin = request.headers.get("Origin"), requestOrigin = new URL(request.url).origin;
   if (!origin || origin !== requestOrigin) return json({ error: "Origen no permitido." }, 403);
   if (!env.OPENAI_API_KEY) return json({ error: "Falta configurar OPENAI_API_KEY en Cloudflare." }, 503);
-  if (!env.MIAULA_ACCESS_TOKEN) return json({ error: "El acceso seguro no está configurado." }, 503);
-  if (!(await equalSecret(request.headers.get("X-MIAULA-TOKEN") || "", env.MIAULA_ACCESS_TOKEN)))
-    return json({ error: "Acceso no autorizado. Comprueba tu código privado." }, 401);
+  if (!env.MIAULA_ACCESS_TOKEN) return json({ code:"SERVER_TOKEN_MISSING", error:"Falta MIAULA_ACCESS_TOKEN en el entorno Preview de Cloudflare." }, 503);
+  const suppliedToken = request.headers.get("X-MIAULA-TOKEN") || "";
+  if (!suppliedToken) return json({ code:"CLIENT_TOKEN_MISSING", error:"La aplicación no ha enviado el código privado." }, 400);
+  if (!(await equalSecret(suppliedToken, env.MIAULA_ACCESS_TOKEN)))
+    return json({ code:"TOKEN_MISMATCH", error:"El código enviado no coincide con el configurado en este entorno." }, 401);
   const length = Number(request.headers.get("Content-Length") || 0);
   if (length > MAX_BODY) return json({ error: "La petición supera el tamaño permitido." }, 413);
   let body; try { body = await request.json(); } catch { return json({ error: "JSON no válido." }, 400); }
