@@ -8,7 +8,7 @@ export async function onRequestPost({request,env}){
  const {student,group,subject,term}=body;
  const allowed=["Matemáticas","Lengua","Conocimiento del Medio","Educación Física"];
  if(typeof student!=="string"||!student.trim()||student.length>40||!allowed.includes(subject)||typeof group!=="string"||!term)return json({error:"Faltan datos de alumno, grupo, materia o periodo."},400);
- const evidence=Array.isArray(body.evidence)?body.evidence.slice(0,150):[];
+ if(!Array.isArray(body.evidence)||body.evidence.length>150)return json({error:"Envía entre 1 y 150 evidencias por análisis. Divide el historial en periodos si supera ese límite."},413);\n const evidence=body.evidence;
  if(!evidence.length)return json({error:"Este alumno todavía no tiene evidencias registradas en esa selección."},400);
  const clean=evidence.map((e,i)=>({date:String(e.date||"").slice(0,20),kind:String(e.kind||"Evidencia").slice(0,60),score:e.score===""||e.score==null?null:Math.max(0,Math.min(10,Number(e.score))),notes:String(e.notes||"").slice(0,1800),evidence:String(e.evidence||"").slice(0,200)}));
  if(clean.some(e=>e.score!==null&&!Number.isFinite(e.score)))return json({error:"Hay una nota numérica no válida."},400);
