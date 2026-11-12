@@ -78,11 +78,12 @@ export default {
  },
  async scheduled(controller,env,ctx){
   const now=madridParts(new Date());
-  if(now.hour!=="08"||now.minute!=="00")return;
   const vapid=await getVapid(env);
   const users=await env.DB.prepare("SELECT u.id,d.payload FROM user_data d JOIN users u ON u.id=d.user_id").all();
   for(const row of users.results||[]){
    let data;try{data=JSON.parse(row.payload)}catch{continue}
+   const deliveryTime=/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.notificationSettings?.time||'')?data.notificationSettings.time:'21:30';
+   if(now.hour+':'+now.minute!==deliveryTime)continue;
    const subsResult=await env.DB.prepare("SELECT endpoint,p256dh,auth FROM push_subscriptions WHERE user_id=?").bind(row.id).all();
    const subs=subsResult.results||[];if(!subs.length)continue;
    const user={id:row.id};
