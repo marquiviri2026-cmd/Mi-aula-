@@ -127,6 +127,7 @@ try {
   await page.locator('#criterionForm textarea[name="description"]').fill("Criterio temporal para prueba automatizada.");
   await page.locator('#criterionForm input[name="weight"]').fill("10");
   await page.locator('#criterionForm button.btn.primary').click();
+  await page.locator("#competencyAiCard").evaluate(el => { el.open = true; });
   await page.locator("#evalGroup").selectOption("4.º Primaria");
   await page.locator("#evalSubject").selectOption("Matemáticas");
   await page.locator("#criteriaList").getByText("QA.TEST.1").waitFor();
