@@ -50,7 +50,7 @@ try {
   for (const [path, method, body, allowed] of apiChecks) {
     const r = await page.request.fetch(base + path, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : {},
+      headers: { "Origin": base, ...(body ? { "Content-Type": "application/json" } : {}) },
       data: body
     });
     assert.ok(allowed.includes(r.status()), path + " debe rechazar la petición sin credenciales de forma controlada; HTTP " + r.status());
