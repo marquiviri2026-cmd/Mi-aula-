@@ -1,6 +1,7 @@
 const COOKIE = "__Host-miaula_session";
 const SESSION_DAYS = 30;
-const ITERATIONS = 310000;
+// Cloudflare Workers Web Crypto rejects PBKDF2 iteration counts above 100,000.
+const ITERATIONS = 100000;
 
 export const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), {
   status,
