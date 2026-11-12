@@ -1,4 +1,4 @@
-const CACHE_NAME = "mi-aula-shell-v2";
+const CACHE_NAME = "mi-aula-shell-v3";
 const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/criterios-extremadura.json"];
 
 self.addEventListener("install", event => {
@@ -50,4 +50,32 @@ self.addEventListener("fetch", event => {
       return response;
     })());
   }
+});
+
+self.addEventListener("push", event => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch { payload = { body: event.data?.text() || "" }; }
+  event.waitUntil(self.registration.showNotification(payload.title || "MI AULA", {
+    body: payload.body || "Tienes un recordatorio pendiente.",
+    icon: "/icon.svg",
+    badge: "/icon.svg",
+    tag: payload.tag || "miaula-recordatorio",
+    data: { url: payload.url || "/" },
+    renotify: false
+  }));
+});
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil((async () => {
+    const clientsList = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of clientsList) {
+      if (client.url.startsWith(self.location.origin) && "focus" in client) {
+        await client.focus();
+        if ("navigate" in client) await client.navigate(target);
+        return;
+      }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow(target);
+  })());
 });
