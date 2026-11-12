@@ -23,7 +23,17 @@ async function equalSecret(a, b) {
 export async function onRequestPost({ request, env }) {
   const origin = request.headers.get("Origin"), requestOrigin = new URL(request.url).origin;
   if (!origin || origin !== requestOrigin) return json({ error: "Origen no permitido." }, 403);
-  if (!env.OPENAI_API_KEY) return json({ error: "Falta configurar OPENAI_API_KEY en Cloudflare." }, 503);
+  if (!env.OPENAI_API_KEY) return json({
+    code: "OPENAI_API_KEY_MISSING",
+    error: "Falta configurar OPENAI_API_KEY en Cloudflare.",
+    diagnostic: {
+      openaiApiKeyPresent: Boolean(env.OPENAI_API_KEY),
+      accessTokenPresent: Boolean(env.MIAULA_ACCESS_TOKEN),
+      vectorStoreIdPresent: Boolean(env.OPENAI_VECTOR_STORE_ID),
+      runtime: "pages-function",
+      hostname: new URL(request.url).hostname
+    }
+  }, 503);
   if (!env.MIAULA_ACCESS_TOKEN) return json({ code:"SERVER_TOKEN_MISSING", error:"Falta MIAULA_ACCESS_TOKEN en el entorno Preview de Cloudflare." }, 503);
   const suppliedToken = request.headers.get("X-MIAULA-TOKEN") || "";
   if (!suppliedToken) return json({ code:"CLIENT_TOKEN_MISSING", error:"La aplicación no ha enviado el código privado." }, 400);
