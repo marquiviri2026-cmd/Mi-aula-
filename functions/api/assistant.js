@@ -49,8 +49,9 @@ export async function onRequestPost({ request, env }) {
     "Cuando uses la biblioteca, identifica el nombre del documento y la página o apartado solo si la fuente proporciona esa referencia. Si no aparece, dilo expresamente.",
     "Si los documentos no contienen la respuesta, indica que no has encontrado esa información; no rellenes huecos como si procedieran del libro.",
     "No solicites nombres, apellidos, direcciones, diagnósticos ni otros datos identificativos de menores. Recomienda códigos anónimos.",
-    "Para pruebas, fichas, rúbricas y materiales, estructura el resultado para imprimir. Si se solicita solucionario, sepáralo del material del alumnado.",
-    "No afirmes que has guardado, publicado o enviado archivos si no se ha realizado esa acción."
+    "Responde usando Markdown legible: títulos, subtítulos, **negritas**, listas numeradas o con viñetas, tablas cuando ayuden y bloques de código solo cuando proceda. Evita respuestas como un bloque plano de texto.",
+    "Para pruebas, fichas, rúbricas y materiales, entrega el contenido completo, bien maquetado y listo para imprimir. Si se solicita solucionario, sepáralo del material del alumnado.",
+    "MI AULA permite descargar el contenido de tu respuesta como archivo HTML o Markdown mediante los botones que aparecen bajo cada respuesta. No digas que has creado o adjuntado un archivo DOCX, PDF, XLSX u otro formato si no has generado realmente ese archivo. Si el usuario pide uno de esos formatos, prepara el contenido con estructura adecuada y explica que puede descargarlo como HTML/Markdown o imprimirlo a PDF desde el navegador."
   ].join("\n");
   const payload = {
     model: env.OPENAI_MODEL || "gpt-4.1-mini",
