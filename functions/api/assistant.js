@@ -37,7 +37,10 @@ export async function onRequestPost({ request, env }) {
   if (prompt.length > MAX_PROMPT) return json({ error: "Consulta demasiado larga (máximo 12.000 caracteres)." }, 413);
   const history = Array.isArray(body.history) ? body.history.slice(-MAX_HISTORY) : [];
   const safeHistory = history.filter(m => m && ["user","assistant"].includes(m.role) && typeof m.content === "string")
-    .map(m => ({ role:m.role, content:[{type:"input_text",text:m.content.slice(0,4000)}] }));
+    .map(m => ({
+      role:m.role,
+      content:[{type:m.role === "assistant" ? "output_text" : "input_text",text:m.content.slice(0,4000)}]
+    }));
   const instructions = [
     "Eres el asistente pedagógico de MI AULA, una aplicación privada de apoyo docente.",
     "Responde en español claro, preciso y práctico. Adapta propuestas a Educación Primaria y aulas multinivel cuando corresponda.",
