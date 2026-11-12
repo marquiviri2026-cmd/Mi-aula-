@@ -282,7 +282,7 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 <div class="field"><label>Materia</label><select name="subject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
 <div class="field"><label>Trimestre</label><select name="term"><option>1.º trimestre</option><option>2.º trimestre</option><option>3.º trimestre</option></select></div>
 <div class="field"><label>Tipo de evidencia</label><select name="kind"><option>Control</option><option>Tarea / producto</option><option>Exposición oral</option><option>Proyecto</option><option>Observación directa</option><option>Cuaderno</option><option>Rúbrica</option></select></div>
-<input type="hidden" name="criterion" id="evidenceCriterion" value="">
+<select hidden name="criterion" id="evidenceCriterion"><option value="">Sin vincular</option></select>
 <div class="field"><label>Nota / valoración (0-10)</label><input name="score" type="number" min="0" max="10" step=".1" placeholder="Déjalo vacío si quieres que la IA analice la anotación"></div>
 <input type="hidden" name="weight" value="100">
 <div class="field"><label>Fecha</label><input name="date" type="date"></div>
