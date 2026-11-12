@@ -34,6 +34,10 @@ assert.ok(html.includes('id="examForm"'), "Falta el formulario de exámenes");
 assert.ok(html.includes("function recordExamResult"), "Falta el registro de notas individuales");
 assert.ok(html.includes("examId:exam.id"), "La evidencia debe quedar vinculada al examen");
 assert.ok(html.includes("function renderExams"), "Falta el renderizado del historial de exámenes");
+assert.ok(html.includes("function enablePushNotifications"), "Falta la activación de notificaciones Push");
+assert.ok(html.includes("/api/push/subscribe"), "Falta la conexión con el registro Push");
+assert.ok(readFileSync("sw.js", "utf8").includes('addEventListener("push"'), "El Service Worker debe gestionar notificaciones Push");
+assert.ok(readFileSync("workers/miaula-push-scheduler.js", "utf8").includes("async scheduled"), "Falta el programador de recordatorios");
 
 assert.ok(Array.isArray(catalog.criteria) && catalog.criteria.length > 0, "El catálogo curricular debe tener criterios");
 const subjects = new Set(catalog.criteria.map((item) => item.subject));
