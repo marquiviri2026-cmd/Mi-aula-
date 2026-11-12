@@ -49,10 +49,11 @@ Devuelve exclusivamente JSON válido con esta estructura:
  const level=value=>["Inicial","En desarrollo","Adecuado","Avanzado","No evaluable"].includes(value)?value:"No evaluable";
  const validIndices=values=>Array.isArray(values)?[...new Set(values.filter(i=>Number.isInteger(i)&&i>=0&&i<clean.length))]:[];
  const validCompetencies=new Set(criteria.map(c=>c.competency).filter(Boolean));
+ const overallScore=validScore(rawAssessment.overall_score);
  const assessment={
   student:student.trim(),subject,period:term,
-  overall_score:validScore(rawAssessment.overall_score),
-  overall_level:rawAssessment.overall_score==null?"No evaluable":level(rawAssessment.overall_level),
+  overall_score:overallScore,
+  overall_level:overallScore===null?"No evaluable":level(rawAssessment.overall_level),
   confidence:confidence(rawAssessment.confidence),
   summary:String(rawAssessment.summary||"").slice(0,3000),
   competencies:(Array.isArray(rawAssessment.competencies)?rawAssessment.competencies:[]).filter(c=>c&&validCompetencies.has(String(c.code))).slice(0,20).map(c=>({code:String(c.code),score:validScore(c.score),level:level(c.level),confidence:confidence(c.confidence),rationale:String(c.rationale||"").slice(0,1200),evidence_indices:validIndices(c.evidence_indices)})),
