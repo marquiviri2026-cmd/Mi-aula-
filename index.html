@@ -258,7 +258,7 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 <div class="field"><label>Fecha</label><input name="date" type="date"></div>
 <div class="field full"><label>Anotación del docente: qué ha hecho, qué sabe hacer, errores, autonomía, apoyos, progreso…</label><textarea name="notes" id="evidenceNotes" placeholder="Ej. Resuelve sumas con llevadas de forma autónoma; en los problemas identifica los datos, pero necesita ayuda para elegir la operación. Si solo registras un examen, deja aquí una nota breve sobre qué contenidos evaluaba."></textarea></div>
 <div class="field full"><span class="helper">No selecciones criterios. Guarda la evidencia y después pulsa «Analizar todas las evidencias» para que la IA relacione automáticamente el historial y proponga la valoración competencial.</span></div>
-<div class="actions field full"><button class="btn primary">Guardar evidencia</button><button type="button" class="btn" onclick="closeForm('gradeForm')">Cancelar</button></div>
+<div class="actions field full"><button class="btn primary">Guardar evidencia</button><button type="button" class="btn" onclick="gradeForm.reset();document.getElementById('registerEvidencePanel').open=false">Cancelar</button></div>
 </form>
 </details>
 <details class="card section" id="competencyAiCard">
@@ -394,7 +394,7 @@ criterionForm.addEventListener('submit',e=>{e.preventDefault();data.criteria=dat
 evalStudentSearch.addEventListener('input',renderGrades);
 [evalGroup,evalSubject,evalTerm].forEach((x,i)=>x.addEventListener('change',()=>{[historyGroup,historySubject,historyTerm][i].value=x.value;renderGrades()}));
 gradeForm.subject.addEventListener('change',criterionOptions);
-gradeForm.addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget;const v=formData(f);if(v.score!==''&&(Number(v.score)<0||Number(v.score)>10)){alert('La nota debe estar entre 0 y 10.');return}data.grades.unshift({id:Date.now(),...v,evidence:v.kind,criterion:'',weight:'100'});f.reset();f.classList.add('hidden');criterionOptions();save()});
+gradeForm.addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget;const v=formData(f);if(v.score!==''&&(Number(v.score)<0||Number(v.score)>10)){alert('La nota debe estar entre 0 y 10.');return}data.grades.unshift({id:Date.now(),...v,evidence:v.kind,criterion:'',weight:'100'});f.reset();criterionOptions();save()});
 let lastUploadedEvidence=null;
 evaluateUploadForm.addEventListener('submit',async e=>{
  e.preventDefault();const token=aiAccessToken.value.trim();if(!token){uploadEvidenceStatus.textContent='Introduce el código privado en Asistente IA.';return}
