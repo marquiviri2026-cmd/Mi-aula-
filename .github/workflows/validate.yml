@@ -25,7 +25,7 @@ jobs:
           node-version: 22
       - name: Comprobar sintaxis de las funciones
         run: |
-          for file in functions/api/*.js; do
+          for file in functions/api/*.js workers/*.js; do
             node --check "$file"
           done
       - name: Ejecutar pruebas de integridad
