@@ -40,7 +40,14 @@ form.addEventListener('submit',async event=>{
   const response=await fetch('/api/auth/register',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
   const raw=await response.text();let data={};try{data=raw?JSON.parse(raw):{}}catch{}
   if(!response.ok)throw new Error((data.error||'No se pudo crear la cuenta.')+(data.stage?' [fase: '+data.stage+']':'')+' (HTTP '+response.status+')');
-  status.textContent='Cuenta creada correctamente. Abriendo MI AULA…';
+  status.textContent='Cuenta creada. Verificando el acceso…';
+  const loginResponse=await fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  const loginRaw=await loginResponse.text();let loginData={};try{loginData=loginRaw?JSON.parse(loginRaw):{}}catch{}
+  if(!loginResponse.ok)throw new Error('La cuenta se creó, pero el inicio automático falló: '+(loginData.error||'HTTP '+loginResponse.status));
+  const check=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});
+  const checkData=await check.json();
+  if(!check.ok||!checkData.user)throw new Error('La cuenta existe, pero el navegador no conserva la sesión. Código de comprobación: '+check.status+'. No vuelvas a registrarte; avísame de este mensaje.');
+  status.textContent='Cuenta creada y sesión verificada. Entrando en MI AULA…';
   window.location.replace('/');
  }catch(error){status.textContent=error.message||'No se pudo conectar. Comprueba la conexión e inténtalo de nuevo.';button.disabled=false;button.textContent='Crear mi cuenta';}
 });
