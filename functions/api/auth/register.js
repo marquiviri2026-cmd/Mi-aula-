@@ -6,15 +6,12 @@ export async function onRequestPost({ request, env }) {
     if (!allowedOrigin(request)) return json({ error: "Origen no permitido." }, 403);
     stage = "database_binding";
     if (!env.DB) return json({ error: "La base de datos D1 no está configurada." }, 503);
-    stage = "setup_key";
-    if (!env.MIAULA_SETUP_KEY) return json({ error: "El registro inicial aún no está habilitado por el administrador." }, 503);
     stage = "request_body";
     let body; try { body = await request.json(); } catch { return json({ error: "Solicitud no válida." }, 400); }
-    const email = normalizeEmail(body.email), password = body.password, setupKey = body.setupKey;
-    if (!validEmail(email) || !passwordPolicy(password) || typeof setupKey !== "string") return json({ error: "Comprueba el correo, la contraseña (mínimo 12 caracteres) y el código de configuración." }, 400);
-    stage = "setup_key_check";
-    if (setupKey !== env.MIAULA_SETUP_KEY) return json({ error: "Código de configuración incorrecto." }, 403);
-    if (email !== "jmerchanp01@educarex.es") return json({ error: "Este correo no está autorizado para la cuenta inicial." }, 403);
+    const email = normalizeEmail(body.email), password = body.password;
+    if (!validEmail(email) || !passwordPolicy(password)) return json({ error: "Comprueba el correo y la contraseña (mínimo 12 caracteres)." }, 400);
+    // Alta temporal limitada al correo alternativo autorizado expresamente por el titular.
+    if (email !== "jaimemervhan@gmail.com") return json({ error: "El registro está limitado al correo autorizado." }, 403);
     stage = "database_lookup";
     const exists = await env.DB.prepare("SELECT id FROM users WHERE email=?").bind(email).first();
     if (exists) return json({ error: "La cuenta ya existe. Inicia sesión." }, 409);
