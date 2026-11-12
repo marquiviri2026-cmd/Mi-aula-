@@ -64,7 +64,7 @@ try {
   await page.locator('#eventForm input[name="time"]').fill("10:30");
   await page.locator('#eventForm input[name="group"]').fill("Grupo de prueba");
   await page.locator('#eventForm input[name="notes"]').fill("Registro temporal de test automatizado");
-  await page.locator('#eventForm button[type="submit"]').click();
+  await page.locator('#eventForm button.btn.primary').click();
   await page.locator("#eventsList").getByText("QA · evento temporal").waitFor();
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.locator('[data-page="agenda"]').click();
@@ -78,7 +78,7 @@ try {
   await page.locator('#groupForm input[name="levels"]').fill("Prueba");
   await page.locator('#groupForm input[name="subjects"]').fill("Prueba funcional");
   await page.locator('#groupForm input[name="count"]').fill("2");
-  await page.locator('#groupForm button[type="submit"]').click();
+  await page.locator('#groupForm button.btn.primary').click();
   await page.locator("#groupsList").getByText("QA · grupo temporal").waitFor();
   await page.locator("#groupsList").getByRole("button", { name: "Eliminar" }).last().click();
   await page.locator("#groupsList").getByText("QA · grupo temporal").waitFor({ state: "detached" });
@@ -90,7 +90,7 @@ try {
   await page.locator('#planForm input[name="subject"]').fill("Matemáticas");
   await page.locator('#planForm input[name="period"]').fill("Prueba automática");
   await page.locator('#planForm textarea[name="notes"]').fill("Contenido temporal para comprobar guardado local.");
-  await page.locator('#planForm button[type="submit"]').click();
+  await page.locator('#planForm button.btn.primary').click();
   let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La programación debe guardarse en localStorage");
   await page.reload({ waitUntil: "domcontentloaded" });
@@ -105,7 +105,7 @@ try {
   await page.locator('#gradeForm select[name="term"]').selectOption("1.º trimestre");
   await page.locator('#gradeForm input[name="score"]').fill("8.5");
   await page.locator('#gradeForm textarea[name="notes"]').fill("Evidencia temporal de test: resuelve operaciones correctamente.");
-  await page.locator('#gradeForm button[type="submit"]').click();
+  await page.locator('#gradeForm button.btn.primary').click();
   saved = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
   assert.ok(saved.grades.some(x => x.student === "QA-01" && x.score === "8.5"), "La evidencia debe guardarse con su nota");
   await page.reload({ waitUntil: "domcontentloaded" });
