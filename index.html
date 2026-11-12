@@ -378,7 +378,7 @@ const groupAliases=group==='1.º y 2.º Primaria'?['1.º y 2.º Primaria','1.º'
 const records=(data.grades||[]).filter(x=>groupAliases.includes(x.group)&&x.subject===subject&&x.term===term&&(!codeFilter||String(x.student||'').toLowerCase().includes(codeFilter)));
 const students=[...new Set(records.map(x=>String(x.student||'').trim()).filter(Boolean))];
 const criteria=getCriteria();
-const assessments=(data.competencyAssessments||[]).filter(a=>students.includes(String(a.student||'').trim())&&a.subject===subject&&a.term===term&&(a.group===group||(group==='4.º Primaria'&&a.group==='4.º Primaria')||(group==='5.º y 6.º Primaria'&&a.group==='5.º y 6.º Primaria')));
+const assessments=(data.competencyAssessments||[]).filter(a=>students.some(st=>st.toLowerCase()===String(a.student||'').trim().toLowerCase())&&a.subject===subject&&a.term===term&&(a.group===group||(group==='4.º Primaria'&&a.group==='4.º Primaria')||(group==='5.º y 6.º Primaria'&&a.group==='5.º y 6.º Primaria')));
 const scoredEvidence=records.filter(x=>x.score!==''&&x.score!=null&&Number.isFinite(Number(x.score)));
 const average=scoredEvidence.length?scoredEvidence.reduce((sum,x)=>sum+Number(x.score),0)/scoredEvidence.length:null;
 evCount.textContent=records.length;evStudents.textContent=students.length;evAverage.textContent=average===null?'—':average.toFixed(2);
@@ -429,6 +429,15 @@ function renderCompetencyAssessment(a){
  const criteria=(a.criteria||[]).map(c=>'<div class="rowitem"><div><b>'+esc(c.code)+'</b><div class="helper">'+esc(c.rationale||'')+'</div><div class="muted">Nivel: '+esc(c.level||'—')+' · Confianza: '+esc(c.confidence||'—')+'</div></div><b>'+(c.score==null?'—':Number(c.score).toFixed(1)+'/10')+'</b></div>').join('');
  competencyResult.innerHTML='<div class="grid"><div class="card"><div class="muted">Nota competencial orientativa</div><div class="metric">'+score+'</div></div><div class="card"><div class="muted">Nivel global</div><div class="metric" style="font-size:19px">'+esc(a.overall_level||'No evaluable')+'</div></div><div class="card"><div class="muted">Confianza del análisis</div><div class="metric" style="font-size:19px">'+esc(a.confidence||'—')+'</div></div></div><div class="notice">'+esc(a.summary||'')+'</div><h3>Competencias específicas</h3>'+(rows||'<p class="helper">No hay competencias con evidencias suficientes.</p>')+'<h3>Criterios relacionados automáticamente</h3>'+(criteria||'<p class="helper">No se han podido relacionar criterios con suficiente seguridad.</p>')+'<h3>Fortalezas</h3>'+escList(a.strengths)+'<h3>Aspectos que debe mejorar</h3>'+escList(a.needs)+'<h3>Evidencias que faltan</h3>'+escList(a.missing_evidence)+'<h3>Próximos pasos</h3>'+escList(a.next_steps)+'<p class="helper">Propuesta generada por IA a partir de las evidencias disponibles. Revísala y valídala antes de utilizarla como calificación oficial.</p>';
 }
+function restoreSavedCompetencyAssessment(){
+ const student=competencyStudent.value.trim(),{group,subject,term}=currentEval();
+ const saved=(data.competencyAssessments||[]).find(a=>String(a.student||'').trim().toLowerCase()===student.toLowerCase()&&a.group===group&&a.subject===subject&&a.term===term);
+ renderCompetencyAssessment(saved||null);
+ if(saved)competencyStatus.textContent='Valoración guardada · '+new Date(saved.updatedAt||Date.now()).toLocaleString('es-ES')+' · '+(saved.evidenceCount||0)+' evidencias analizadas.';
+ else if(!runCompetencyAssessment.disabled)competencyStatus.textContent='La IA solo calculará una nota si encuentra evidencias suficientes.';
+}
+[evalGroup,evalSubject,evalTerm,competencyStudent].forEach(x=>x.addEventListener('change',restoreSavedCompetencyAssessment));
+competencyStudent.addEventListener('input',restoreSavedCompetencyAssessment);
 runCompetencyAssessment.addEventListener('click',async()=>{
  const student=competencyStudent.value.trim(),token=aiAccessToken.value.trim(),group=evalGroup.value,subject=evalSubject.value,term=evalTerm.value;
  if(!student){competencyStatus.textContent='Introduce el código anónimo del alumno.';return}
@@ -444,7 +453,7 @@ runCompetencyAssessment.addEventListener('click',async()=>{
   const result=await response.json();if(!response.ok)throw Error(result.error||'No se pudo completar la valoración');
   const assessment={...result.assessment,student,group,subject,term,updatedAt:new Date().toISOString(),evidenceCount:result.evidence_count};
   data.competencyAssessments=data.competencyAssessments||[];
-  data.competencyAssessments=data.competencyAssessments.filter(x=>!(x.student===student&&x.group===group&&x.subject===subject&&x.term===term));
+  data.competencyAssessments=data.competencyAssessments.filter(x=>!(String(x.student||'').trim().toLowerCase()===student.toLowerCase()&&x.group===group&&x.subject===subject&&x.term===term));
   data.competencyAssessments.unshift(assessment);save();renderCompetencyAssessment(assessment);
   competencyStatus.textContent='Análisis completado con '+result.evidence_count+' evidencias y '+result.criteria_count+' criterios de referencia.';
  }catch(error){competencyStatus.textContent='Error: '+error.message}
@@ -511,5 +520,5 @@ const dailyQuotes=[
 const dayIndex=Math.floor((new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())-new Date(new Date().getFullYear(),0,0))/86400000);
 const dailyMotivation=document.getElementById('dailyMotivation');
 if(dailyMotivation)dailyMotivation.textContent=dailyQuotes[(dayIndex-1)%dailyQuotes.length];
-today.textContent=new Intl.DateTimeFormat('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());renderAll();loadOfficialCriteria();
+today.textContent=new Intl.DateTimeFormat('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());renderAll();restoreSavedCompetencyAssessment();loadOfficialCriteria();
 </script></body></html>
