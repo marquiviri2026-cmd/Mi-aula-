@@ -1,6 +1,6 @@
 const VAPID_PUBLIC_KEY = "BGhnC17c2n1juVj8VrTBIa6Pcdtms6XLPxPgF3Z82DIi4ZQrbe4bbQJjZ-TYN1QsoWNES8oIXgPbEKGYtWqtDkI";
 const textEncoder = new TextEncoder();
-const b64u = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/=/g,"").replace(/\\+/g,"-").replace(/\\//g,"_");
+const b64u = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
 const fromB64u = value => Uint8Array.from(atob(value.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((value.length+3)%4)),c=>c.charCodeAt(0));
 const concat = (...arrays) => { const out=new Uint8Array(arrays.reduce((n,a)=>n+a.length,0));let offset=0;for(const a of arrays){out.set(a,offset);offset+=a.length}return out };
 async function hmac(key,data){const k=await crypto.subtle.importKey("raw",key,{name:"HMAC",hash:"SHA-256"},false,["sign"]);return new Uint8Array(await crypto.subtle.sign("HMAC",k,data))}
@@ -20,10 +20,10 @@ async function encryptPayload(subscription,payload){
  const serverPair=await crypto.subtle.generateKey({name:"ECDH",namedCurve:"P-256"},true,["deriveBits"]);
  const serverPublic=new Uint8Array(await crypto.subtle.exportKey("raw",serverPair.publicKey));
  const shared=new Uint8Array(await crypto.subtle.deriveBits({name:"ECDH",public:clientKey},serverPair.privateKey,256));
- const ikm=await hkdf(shared,auth,concat(textEncoder.encode("WebPush: info\\0"),clientPublic,serverPublic),32);
+ const ikm=await hkdf(shared,auth,concat(textEncoder.encode("WebPush: info\0"),clientPublic,serverPublic),32);
  const salt=crypto.getRandomValues(new Uint8Array(16));
- const cek=await hkdf(ikm,salt,textEncoder.encode("Content-Encoding: aes128gcm\\0"),16);
- const nonce=await hkdf(ikm,salt,textEncoder.encode("Content-Encoding: nonce\\0"),12);
+ const cek=await hkdf(ikm,salt,textEncoder.encode("Content-Encoding: aes128gcm\0"),16);
+ const nonce=await hkdf(ikm,salt,textEncoder.encode("Content-Encoding: nonce\0"),12);
  const aes=await crypto.subtle.importKey("raw",cek,"AES-GCM",false,["encrypt"]);
  const plain=concat(textEncoder.encode(JSON.stringify(payload)),new Uint8Array([2]));
  const cipher=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv:nonce,tagLength:128},aes,plain));
