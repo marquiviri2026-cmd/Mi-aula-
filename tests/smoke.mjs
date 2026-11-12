@@ -14,9 +14,9 @@ for (const match of html.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)) {
   assert.ok(ids.includes(match[1]), "Falta el elemento #" + match[1] + " utilizado por JavaScript");
 }
 
-const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)].filter((m) => m[1].trim());
+const scripts = html.split("<script").slice(1).map((part) => part.slice(part.indexOf(">") + 1, part.indexOf("</script>"))).filter((code) => code.trim());
 assert.equal(scripts.length, 1, "Se espera un único script integrado (los SDK externos no cuentan)");
-new Script(scripts[0][1], { filename: "index.html:inline-script" });
+new Script(scripts[0], { filename: "index.html:inline-script" });
 
 const apiFiles = readdirSync("functions/api").filter((name) => name.endsWith(".js"));
 for (const route of ["assistant.js", "library.js", "library-search.js", "competency-evaluate.js", "evaluate.js"]) {
