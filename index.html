@@ -155,7 +155,15 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
 
-/* MI AULA · evaluación competencial */
+/* Paneles desplegables de evaluación */
+#page-evaluacion details.card>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800;font-size:16px}
+#page-evaluacion details.card>summary::-webkit-details-marker{display:none}
+#page-evaluacion details.card>summary:after{content:'＋';color:var(--blue);font-size:21px}
+#page-evaluacion details.card[open]>summary:after{content:'−'}
+#page-evaluacion details.card[open]>summary{padding-bottom:14px;border-bottom:1px solid #edf0f5;margin-bottom:15px}
+#page-evaluacion #competencyResult .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:700px){#page-evaluacion #competencyResult .grid{grid-template-columns:1fr}}
+\n/* MI AULA · evaluación competencial */
 #page-evaluacion .grid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:15px}#page-evaluacion .metric{font-size:27px}#page-evaluacion .notice{line-height:1.6}#page-evaluacion .rowitem{align-items:flex-start}@media(max-width:800px){#page-evaluacion .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* MI AULA · daily workspace polish */
 .page{animation:pageIn .24s ease both}
@@ -220,63 +228,17 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 <section class="page" id="page-grupos"><div class="toolbar"><div class="helper">Organiza grupos y materias. Utiliza códigos anónimos, no nombres de menores.</div><button class="btn primary" onclick="openForm('groupForm')">＋ Añadir grupo</button></div><div class="card"><form id="groupForm" class="formgrid hidden"><div class="field"><label>Nombre</label><input name="name" required></div><div class="field"><label>Niveles</label><input name="levels"></div><div class="field"><label>Materias</label><input name="subjects"></div><div class="field"><label>N.º de alumnos</label><input name="count" type="number" min="0"></div><div class="actions field full"><button class="btn primary">Guardar grupo</button><button type="button" class="btn" onclick="closeForm('groupForm')">Cancelar</button></div></form><div id="groupsList"></div></div></section>
 <section class="page" id="page-programacion"><div class="toolbar"><div class="helper">Registra programación anual, unidades, situaciones de aprendizaje y proyectos.</div><button class="btn primary" onclick="openForm('planForm')">＋ Nueva planificación</button></div><div class="card"><form id="planForm" class="formgrid hidden"><div class="field"><label>Título</label><input name="title" required></div><div class="field"><label>Tipo</label><select name="type"><option>Programación anual</option><option>Situación de aprendizaje</option><option>Unidad didáctica</option><option>Proyecto</option></select></div><div class="field"><label>Grupo</label><input name="group"></div><div class="field"><label>Materia</label><input name="subject"></div><div class="field"><label>Temporalización</label><input name="period" placeholder="1.er trimestre · 6 sesiones"></div><div class="field"><label>Estado</label><select name="status"><option>Pendiente</option><option>En curso</option><option>Completada</option></select></div><div class="field full"><label>Objetivos, competencias, saberes y actividades</label><textarea name="notes"></textarea></div><div class="actions field full"><button class="btn primary">Guardar planificación</button><button type="button" class="btn" onclick="closeForm('planForm')">Cancelar</button></div></form><div id="plansList"></div></div></section>
 <section class="page" id="page-evaluacion">
-<div class="toolbar"><div><b>Evaluación competencial</b><div class="helper">Seguimiento continuo por criterios de evaluación, evidencias y trimestre. Las propuestas de IA siempre requieren tu validación.</div></div><button class="btn primary" onclick="openForm('gradeForm')">＋ Registrar evidencia</button></div>
+<div class="toolbar"><div><b>Evaluación competencial</b><div class="helper">Registra evidencias, consulta el historial de cada alumno y solicita una valoración orientativa de la IA. La decisión oficial siempre es docente.</div></div></div>
 <div class="grid" id="assessmentSummary">
-<div class="card"><div class="muted">Evidencias registradas</div><div class="metric" id="evCount">0</div><div class="helper">Del trimestre seleccionado</div></div>
+<div class="card"><div class="muted">Evidencias registradas</div><div class="metric" id="evCount">0</div><div class="helper">De la selección actual</div></div>
 <div class="card"><div class="muted">Alumnado evaluado</div><div class="metric" id="evStudents">0</div><div class="helper">Códigos con evidencias</div></div>
 <div class="card"><div class="muted">Media provisional</div><div class="metric" id="evAverage">—</div><div class="helper">Solo con criterios valorados</div></div>
 <div class="card"><div class="muted">Criterios valorados</div><div class="metric" id="evCriteria">0</div><div class="helper">Con evidencias vinculadas</div></div>
 </div>
-<div class="card section">
-<h2>Vista de evaluación</h2>
-<div class="formgrid">
-<div class="field"><label>Grupo / curso</label><select id="evalGroup"><option>1.º y 2.º Primaria</option><option>4.º Primaria</option><option>5.º y 6.º Primaria</option></select></div>
-<div class="field"><label>Materia</label><select id="evalSubject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
-<div class="field"><label>Trimestre</label><select id="evalTerm"><option value="1.º trimestre">1.º trimestre</option><option value="2.º trimestre">2.º trimestre</option><option value="3.º trimestre">3.º trimestre</option></select></div>
-</div>
-<div id="evalOverview" class="section"></div>
-</div>
-<div class="card section" id="competencyAiCard">
-<h2>Valoración competencial automática con IA</h2>
-<p class="helper">Selecciona el código del alumno. MI AULA reunirá sus observaciones, tareas y notas numéricas del periodo y la IA las relacionará con los criterios y competencias del currículo sin que tengas que vincularlas manualmente.</p>
-<div class="formgrid">
-<div class="field"><label>Código anónimo del alumno</label><input id="competencyStudent" maxlength="40" placeholder="Ej. A01"></div>
-<div class="field full actions"><button type="button" class="btn primary" id="runCompetencyAssessment">✦ Analizar todas las evidencias y calcular valoración</button><span class="helper" id="competencyStatus">La IA tendrá en cuenta el conjunto de evidencias guardadas de este alumno, área y trimestre.</span></div>
-</div>
-<div id="competencyResult" class="section"></div>
-</div>
-<div class="card section">
-<h2>Criterios de evaluación y ponderación</h2>
-<p class="helper">Catálogo interno de referencia de la IA: 384 criterios del Decreto 107/2022, Anexo III. No necesitas seleccionarlos ni asignarles pesos manualmente; la IA los utiliza para interpretar las evidencias.</p>
-<form id="criterionForm" class="formgrid">
-<div class="field"><label>Código del criterio</label><input name="code" required placeholder="Ej. MAT.2.1"></div>
-<div class="field"><label>Curso / ciclo</label><select name="grade"><option>1.º</option><option>2.º</option><option>4.º</option><option>5.º</option><option>6.º</option><option>1.º ciclo</option><option>2.º ciclo</option><option>3.º ciclo</option></select></div>
-<div class="field"><label>Materia</label><select name="subject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
-<div class="field full"><label>Redacción literal del criterio de evaluación</label><textarea name="description" required placeholder="Pega aquí el criterio del Decreto 107/2022 correspondiente a tu ciclo y área."></textarea></div>
-<div class="field"><label>Peso relativo del criterio</label><input name="weight" type="number" min="1" max="100" value="10" required></div>
-<div class="field"><label>Competencia específica relacionada</label><input name="competency" placeholder="Ej. CE1"></div>
-<div class="field"><label>Competencia clave (opcional)</label><select name="keyCompetency"><option value="">Sin especificar</option><option>CCL</option><option>CP</option><option>STEM</option><option>CD</option><option>CPSAA</option><option>CC</option><option>CE</option><option>CCEC</option></select></div>
-<div class="field full actions"><button class="btn primary">Guardar criterio</button></div>
-</form>
-<div id="criteriaList" class="section"></div>
-</div>
-<div class="card section">
-<h2>Subir evidencias para análisis</h2>
-<p class="helper">Sube controles, tareas, proyectos, rúbricas o fotografías legibles. La IA describirá lo que puede comprobar y sugerirá relaciones curriculares; no asignará una nota oficial ni guardará nada sin tu confirmación.</p>
-<form id="evaluateUploadForm" class="formgrid">
-<div class="field"><label>Código anónimo del alumno</label><input name="student" required maxlength="40" placeholder="Ej. A01"></div>
-<div class="field"><label>Curso / grupo</label><select name="group" required><option value="1.º y 2.º Primaria">1.º y 2.º Primaria · primer ciclo</option><option value="4.º Primaria">4.º Primaria · segundo ciclo</option><option value="5.º y 6.º Primaria">5.º y 6.º Primaria · tercer ciclo</option></select></div>
-<div class="field"><label>Área</label><select name="subject" required><option>Matemáticas</option><option value="Lengua">Lengua</option><option value="Conocimiento del Medio">Conocimiento del Medio</option><option>Educación Física</option></select></div>
-<div class="field"><label>Trimestre</label><select name="term"><option>1.º trimestre</option><option>2.º trimestre</option><option>3.º trimestre</option></select></div>
-<div class="field full"><label>Archivos de evidencia (PDF, imagen, DOCX, PPTX)</label><input name="files" id="assessmentFiles" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx,.txt" multiple required><span class="helper">Hasta 5 archivos, máximo 18 MiB cada uno. Evita nombres, apellidos y datos personales; usa códigos.</span></div>
-<div class="field full actions"><button class="btn primary" id="analyzeEvidenceButton" type="submit">✦ Analizar evidencias con IA</button><span class="helper" id="uploadEvidenceStatus">Se enviarán al servicio de IA para su análisis.</span></div>
-</form>
-<div id="uploadedEvidenceAnalysis" class="notice hidden" style="white-space:pre-wrap;margin-top:12px"></div>
-<div class="actions" id="savePendingEvidenceRow" style="display:none;margin-top:10px"><button class="btn" type="button" id="savePendingEvidence">Guardar como evidencia pendiente de valoración</button></div>
-</div>
-<div class="card section">
-<h2>Registrar control, tarea u observación</h2>
-<form id="gradeForm" class="formgrid hidden">
+<details class="card section" id="registerEvidencePanel">
+<summary>＋ Registrar evidencia</summary>
+<p class="helper">Abre este apartado para registrar un control, una tarea, un proyecto, una exposición, el cuaderno o una observación.</p>
+<form id="gradeForm" class="formgrid">
 <div class="field"><label>Código anónimo del alumno</label><input name="student" required placeholder="Ej. A01"></div>
 <div class="field"><label>Grupo / curso</label><select name="group"><option>1.º y 2.º Primaria</option><option>4.º, 5.º y 6.º Primaria</option><option>1.º</option><option>2.º</option><option>4.º</option><option>5.º</option><option>6.º</option></select></div>
 <div class="field"><label>Materia</label><select name="subject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
@@ -290,9 +252,60 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 <div class="field full"><span class="helper">No selecciones criterios. Guarda la evidencia y después pulsa «Analizar todas las evidencias» para que la IA relacione automáticamente el historial y proponga la valoración competencial.</span></div>
 <div class="actions field full"><button class="btn primary">Guardar evidencia</button><button type="button" class="btn" onclick="closeForm('gradeForm')">Cancelar</button></div>
 </form>
-<div id="gradesList"></div>
+</details>
+<details class="card section" id="competencyAiCard">
+<summary>✦ Valoración competencial automática con IA</summary>
+<p class="helper">Selecciona curso, materia y trimestre e introduce el código anónimo. La IA reunirá todas las evidencias de esa combinación y las relacionará automáticamente con criterios y competencias.</p>
+<div class="formgrid">
+<div class="field"><label>Curso</label><select id="evalGroup"><option>1.º y 2.º Primaria</option><option>4.º Primaria</option><option>5.º y 6.º Primaria</option></select></div>
+<div class="field"><label>Materia que se va a evaluar</label><select id="evalSubject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
+<div class="field"><label>Trimestre</label><select id="evalTerm"><option value="1.º trimestre">1.º trimestre</option><option value="2.º trimestre">2.º trimestre</option><option value="3.º trimestre">3.º trimestre</option></select></div>
+<div class="field"><label>Código anónimo del alumno</label><input id="competencyStudent" maxlength="40" placeholder="Ej. ALU-01"></div>
+<div class="field full actions"><button type="button" class="btn primary" id="runCompetencyAssessment">✦ Analizar evidencias y calcular valoración</button><span class="helper" id="competencyStatus">La IA solo calculará una nota si encuentra evidencias suficientes.</span></div>
 </div>
-<div class="notice">Importante: la calificación oficial corresponde al profesorado y se fundamenta en los criterios de evaluación. La media numérica de MI AULA es un indicador de seguimiento configurable, no sustituye la valoración global, continua y formativa ni las decisiones colegiadas que correspondan. Utiliza códigos anónimos, no nombres ni datos sensibles.</div>
+<div id="competencyResult" class="section"></div>
+</details>
+<details class="card section" id="uploadEvidencePanel">
+<summary>＋ Subir evidencias para análisis</summary>
+<p class="helper">Sube controles, tareas, proyectos, rúbricas o fotografías legibles. Después podrás guardarlos como evidencias pendientes de valoración.</p>
+<form id="evaluateUploadForm" class="formgrid">
+<div class="field"><label>Código anónimo del alumno</label><input name="student" required maxlength="40" placeholder="Ej. A01"></div>
+<div class="field"><label>Curso / grupo</label><select name="group" required><option value="1.º y 2.º Primaria">1.º y 2.º Primaria · primer ciclo</option><option value="4.º Primaria">4.º Primaria · segundo ciclo</option><option value="5.º y 6.º Primaria">5.º y 6.º Primaria · tercer ciclo</option></select></div>
+<div class="field"><label>Área</label><select name="subject" required><option>Matemáticas</option><option value="Lengua">Lengua</option><option value="Conocimiento del Medio">Conocimiento del Medio</option><option>Educación Física</option></select></div>
+<div class="field"><label>Trimestre</label><select name="term"><option>1.º trimestre</option><option>2.º trimestre</option><option>3.º trimestre</option></select></div>
+<div class="field full"><label>Archivos de evidencia (PDF, imagen, DOCX, PPTX)</label><input name="files" id="assessmentFiles" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx,.txt" multiple required><span class="helper">Hasta 5 archivos, máximo 18 MiB cada uno. Evita nombres, apellidos y datos personales; usa códigos.</span></div>
+<div class="field full actions"><button class="btn primary" id="analyzeEvidenceButton" type="submit">✦ Analizar evidencias con IA</button><span class="helper" id="uploadEvidenceStatus">Se enviarán al servicio de IA para su análisis.</span></div>
+</form>
+<div id="uploadedEvidenceAnalysis" class="notice hidden" style="white-space:pre-wrap;margin-top:12px"></div>
+<div class="actions" id="savePendingEvidenceRow" style="display:none;margin-top:10px"><button class="btn" type="button" id="savePendingEvidence">Guardar como evidencia pendiente de valoración</button></div>
+</details>
+<details class="card section" id="evaluationHistoryPanel" open>
+<summary>⌕ Vista de evaluación e historial del alumno</summary>
+<div class="formgrid">
+<div class="field"><label>Curso / grupo</label><select id="historyGroup"><option value="1.º y 2.º Primaria">1.º y 2.º Primaria</option><option value="4.º Primaria">4.º Primaria</option><option value="5.º y 6.º Primaria">5.º y 6.º Primaria</option></select></div>
+<div class="field"><label>Materia</label><select id="historySubject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
+<div class="field"><label>Trimestre</label><select id="historyTerm"><option value="1.º trimestre">1.º trimestre</option><option value="2.º trimestre">2.º trimestre</option><option value="3.º trimestre">3.º trimestre</option></select></div>
+<div class="field"><label>Buscar alumno por código</label><input id="evalStudentSearch" maxlength="40" placeholder="Escribe ALU-01, por ejemplo"></div>
+</div>
+<div id="evalOverview" class="section"></div>
+<div id="gradesList"></div>
+</details>
+<details class="card section" id="criteriaReferencePanel">
+<summary>Criterios de evaluación y ponderación</summary>
+<p class="helper">Catálogo interno de referencia de la IA: 384 criterios del Decreto 107/2022, Anexo III. No necesitas seleccionarlos ni asignarles pesos manualmente.</p>
+<form id="criterionForm" class="formgrid">
+<div class="field"><label>Código del criterio</label><input name="code" required placeholder="Ej. MAT.2.1"></div>
+<div class="field"><label>Curso / ciclo</label><select name="grade"><option>1.º</option><option>2.º</option><option>4.º</option><option>5.º</option><option>6.º</option><option>1.º ciclo</option><option>2.º ciclo</option><option>3.º ciclo</option></select></div>
+<div class="field"><label>Materia</label><select name="subject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option></select></div>
+<div class="field full"><label>Redacción literal del criterio de evaluación</label><textarea name="description" required></textarea></div>
+<div class="field"><label>Peso relativo del criterio</label><input name="weight" type="number" min="1" max="100" value="10" required></div>
+<div class="field"><label>Competencia específica relacionada</label><input name="competency" placeholder="Ej. CE1"></div>
+<div class="field"><label>Competencia clave (opcional)</label><select name="keyCompetency"><option value="">Sin especificar</option><option>CCL</option><option>CP</option><option>STEM</option><option>CD</option><option>CPSAA</option><option>CC</option><option>CE</option><option>CCEC</option></select></div>
+<div class="field full actions"><button class="btn primary">Guardar criterio</button></div>
+</form>
+<div id="criteriaList" class="section"></div>
+</details>
+<div class="notice">La IA genera una propuesta orientativa. No sustituye la evaluación continua ni la decisión profesional del docente. Utiliza códigos anónimos, nunca nombres ni datos sensibles.</div>
 </section>
 <button type="button" id="interpretEvidence" hidden></button><span id="aiEvidenceStatus" hidden></span><div id="aiEvidenceProposal" hidden></div>
 <section class="page" id="page-biblioteca"><div class="toolbar"><div class="helper">Biblioteca documental conectada a OpenAI File Search. Sube libros y materiales para consultarlos desde el asistente.</div><button class="btn" type="button" onclick="loadLibrary()">↻ Actualizar biblioteca</button></div><div class="card"><form id="libraryForm" class="formgrid"><div class="field"><label>Materia</label><select name="subject"><option>Matemáticas</option><option>Lengua</option><option>Conocimiento del Medio</option><option>Educación Física</option><option>General</option></select></div><div class="field"><label>Curso</label><select name="grade"><option>1.º Primaria</option><option>2.º Primaria</option><option>4.º Primaria</option><option>5.º Primaria</option><option>6.º Primaria</option><option>Multinivel</option><option>Todos</option></select></div><div class="field"><label>Tipo de material</label><select name="kind"><option>Libro de texto</option><option>Libro del profesorado</option><option>Evaluación</option><option>Programación</option><option>Ficha o material</option><option>Otro</option></select></div><div class="field full"><label>Selecciona todos los documentos (hasta 95 MiB cada uno)</label><input name="files" id="libraryFiles" type="file" accept=".pdf,.doc,.docx,.pptx,.txt,.md" multiple required></div><div class="field full actions"><button class="btn primary" id="libraryUpload">Subir todos e indexar</button><span class="helper" id="libraryStatus">Introduce primero tu código privado en Asistente IA.</span></div></form><div class="notice">Los archivos se envían a OpenAI para indexarlos y permitir búsquedas por contenido. No subas datos personales del alumnado ni documentos para los que no tengas autorización de uso.</div></div><div class="card section"><h2>Buscar en tus libros</h2><form id="librarySearchForm" class="formgrid"><div class="field" style="grid-column:1/-1"><label>¿Qué necesitas encontrar?</label><input id="librarySearchQuery" name="query" type="search" maxlength="1000" placeholder="Ej. problemas de divisiones con dos cifras para 5.º de Primaria" required></div><div class="field full actions"><button class="btn primary" id="librarySearchButton" type="submit">Buscar</button><span class="helper" id="librarySearchStatus">Escribe lo que buscas y pulsa Buscar. Se mostrarán los documentos y fragmentos más relevantes.</span></div></form><div id="librarySearchResults"></div></div><div class="card section"><h2>Documentos de la biblioteca</h2><div id="libraryList"><div class="empty">Pulsa «Actualizar biblioteca» para consultar los documentos.</div></div></div></section>
@@ -333,8 +346,8 @@ function criterionOptions(){const sel=document.getElementById('evidenceCriterion
 function weighted(values){const valid=values.filter(x=>Number.isFinite(Number(x.score))&&x.score!==''&&Number(x.weight)>0);const total=valid.reduce((a,x)=>a+Number(x.weight),0);return total?valid.reduce((a,x)=>a+Number(x.score)*Number(x.weight),0)/total:null}
 function studentFinal(student,records,criteria){const rows=[];for(const c of criteria){const ev=records.filter(r=>r.student===student&&String(r.criterion)===String(c.id));const mark=weighted(ev);if(mark!==null)rows.push({score:mark,weight:Number(c.weight)||0})}return weighted(rows)}
 function renderGrades(){
-const {group,subject,term}=currentEval();
-const records=(data.grades||[]).filter(x=>x.group===group&&x.subject===subject&&x.term===term);
+const group=historyGroup.value,subject=historySubject.value,term=historyTerm.value;
+const codeFilter=(evalStudentSearch.value||'').trim().toLowerCase();\nconst groupAliases=group==='1.º y 2.º Primaria'?['1.º y 2.º Primaria']:group==='4.º Primaria'?['4.º Primaria','4.º, 5.º y 6.º Primaria']:['5.º y 6.º Primaria','4.º, 5.º y 6.º Primaria'];\nconst records=(data.grades||[]).filter(x=>groupAliases.includes(x.group)&&x.subject===subject&&x.term===term&&(!codeFilter||String(x.student||'').toLowerCase().includes(codeFilter)));
 const students=[...new Set(records.map(x=>x.student))];
 const criteria=getCriteria();const finals=students.map(student=>studentFinal(student,records,criteria)).filter(v=>v!==null);const average=finals.length?finals.reduce((a,b)=>a+b,0)/finals.length:null;
 evCount.textContent=records.length;evStudents.textContent=students.length;evAverage.textContent=average===null?'—':average.toFixed(2);
@@ -349,7 +362,7 @@ gradesList.innerHTML=records.length?'<div class="tablewrap"><table><tr><th>Alumn
 }
 function deleteCriterion(id){if(confirm('¿Eliminar este criterio? Las evidencias ya registradas se conservarán, pero quedarán sin vincular.')){data.criteria=(data.criteria||[]).filter(c=>c.id!==id);save()}}
 criterionForm.addEventListener('submit',e=>{e.preventDefault();data.criteria=data.criteria||[];data.criteria.unshift({id:Date.now(),...formData(criterionForm)});criterionForm.reset();save()});
-[evalGroup,evalSubject,evalTerm].forEach(x=>x.addEventListener('change',renderGrades));
+[historyGroup,historySubject,historyTerm].forEach((x,i)=>x.addEventListener('change',()=>{[evalGroup,evalSubject,evalTerm][i].value=x.value;renderGrades()}));\nevalStudentSearch.addEventListener('input',renderGrades);\n[evalGroup,evalSubject,evalTerm].forEach((x,i)=>x.addEventListener('change',()=>{[historyGroup,historySubject,historyTerm][i].value=x.value;renderGrades()}));
 gradeForm.subject.addEventListener('change',criterionOptions);
 gradeForm.addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget;const v=formData(f);if(v.score!==''&&(Number(v.score)<0||Number(v.score)>10)){alert('La nota debe estar entre 0 y 10.');return}data.grades.unshift({id:Date.now(),...v,evidence:v.kind,criterion:'',weight:'100'});f.reset();f.classList.add('hidden');criterionOptions();save()});
 let lastUploadedEvidence=null;
@@ -368,7 +381,7 @@ savePendingEvidence.onclick=()=>{
 };
 interpretEvidence.onclick=async()=>{const note=evidenceNotes.value.trim(),token=aiAccessToken.value.trim();if(!note){aiEvidenceStatus.textContent='Escribe primero una anotación.';return}if(!token){aiEvidenceStatus.textContent='Introduce el código privado en el apartado Asistente IA.';return}interpretEvidence.disabled=true;aiEvidenceStatus.textContent='Analizando la evidencia…';aiEvidenceProposal.classList.remove('hidden');aiEvidenceProposal.textContent='La IA está relacionando la observación con los criterios disponibles.';try{const cs=(data.criteria||[]).filter(c=>c.subject===gradeForm.subject.value);const prompt='Analiza esta anotación docente de Educación Primaria para evaluación formativa y competencial en Extremadura. Materia: '+gradeForm.subject.value+'. Grupo: '+gradeForm.group.value+'. Tipo de evidencia: '+gradeForm.kind.value+'. Criterios oficiales disponibles (si los hay): '+JSON.stringify(cs.map(c=>({id:c.id,code:c.code,description:c.description,grade:c.grade})))+'. Anotación: '+note+'. Devuelve una propuesta breve con: criterio relacionado (código exacto o "no identificable"), qué evidencia observable aporta, nivel de desempeño (inicial/en desarrollo/adecuado/avanzado), nota orientativa 0-10 SOLO si la anotación aporta evidencia suficiente; si no, escribe "sin nota suficiente", y qué evidencia adicional convendría recoger. No inventes información ni conviertas esfuerzo, conducta o asistencia en nota de aprendizaje. Termina con "PROPUESTA NUMÉRICA: X/10" o "PROPUESTA NUMÉRICA: SIN DATOS".';const r=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json','X-MIAULA-TOKEN':token},body:JSON.stringify({prompt,history:[]})});const j=await r.json();if(!r.ok)throw Error(j.error||'No se pudo analizar');aiEvidenceProposal.textContent=j.answer;const m=j.answer.match(/PROPUESTA NUMÉRICA:\s*(\d+(?:[.,]\d+)?)\s*\/\s*10/i);if(m){gradeForm.score.value=String(Math.max(0,Math.min(10,Number(m[1].replace(',','.')))));aiEvidenceStatus.textContent='Propuesta numérica cargada como borrador. Revísala antes de guardar.'}else aiEvidenceStatus.textContent='La IA no ha encontrado base suficiente para proponer una nota. Revisa su análisis.'}catch(err){aiEvidenceStatus.textContent='Error: '+err.message;aiEvidenceProposal.textContent='No se ha podido analizar la anotación.'}finally{interpretEvidence.disabled=false}};
 
-const competencyStudent=document.getElementById('competencyStudent');
+const historyGroup=document.getElementById('historyGroup'),historySubject=document.getElementById('historySubject'),historyTerm=document.getElementById('historyTerm'),evalStudentSearch=document.getElementById('evalStudentSearch');\nconst competencyStudent=document.getElementById('competencyStudent');
 const runCompetencyAssessment=document.getElementById('runCompetencyAssessment');
 const competencyStatus=document.getElementById('competencyStatus');
 const competencyResult=document.getElementById('competencyResult');
@@ -384,12 +397,12 @@ runCompetencyAssessment.addEventListener('click',async()=>{
  const student=competencyStudent.value.trim(),token=aiAccessToken.value.trim(),group=evalGroup.value,subject=evalSubject.value,term=evalTerm.value;
  if(!student){competencyStatus.textContent='Introduce el código anónimo del alumno.';return}
  if(!token){competencyStatus.textContent='Introduce el código privado en el apartado Asistente IA.';return}
- const storedGroup=group==='1.º y 2.º Primaria'?'1.º y 2.º Primaria':'4.º, 5.º y 6.º Primaria';
- const records=(data.grades||[]).filter(x=>x.student===student&&x.group===storedGroup&&x.subject===subject&&x.term===term);
+ const storedGroup=group==='1.º y 2.º Primaria'?'1.º y 2.º Primaria':group==='4.º Primaria'?'4.º Primaria':'5.º y 6.º Primaria';
+ const records=(data.grades||[]).filter(x=>x.student===student&&(x.group===storedGroup||x.group==='4.º, 5.º y 6.º Primaria')&&x.subject===subject&&x.term===term);
  if(!records.length){competencyStatus.textContent='No hay evidencias guardadas para este alumno, materia y trimestre.';return}
  runCompetencyAssessment.disabled=true;runCompetencyAssessment.textContent='Analizando historial…';competencyStatus.textContent='La IA está relacionando '+records.length+' evidencia(s) con el currículo oficial.';
  try{
-  const payload={student,group,subject,term,evidence:records.map(x=>({date:x.date,kind:x.kind,score:x.score,notes:x.notes,evidence:x.evidence}))};
+  const payload={student,group:storedGroup,subject,term,evidence:records.map(x=>({date:x.date,kind:x.kind,score:x.score,notes:x.notes,evidence:x.evidence}))};
   const response=await fetch('/api/competency-evaluate',{method:'POST',headers:{'Content-Type':'application/json','X-MIAULA-TOKEN':token},body:JSON.stringify(payload)});
   const result=await response.json();if(!response.ok)throw Error(result.error||'No se pudo completar la valoración');
   const assessment={...result.assessment,student,group,subject,term,updatedAt:new Date().toISOString(),evidenceCount:result.evidence_count};
