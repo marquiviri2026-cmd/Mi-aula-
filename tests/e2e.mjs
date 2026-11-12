@@ -129,10 +129,9 @@ try {
   await page.locator("#competencyAiCard").evaluate(el => { el.open = true; });
   await page.locator("#evalGroup").selectOption("4.º Primaria");
   await page.locator("#evalSubject").selectOption("Matemáticas");
-  await page.locator("#criteriaList").getByText("QA.TEST.1").waitFor();
-  await page.locator('#criteriaList .rowitem:has-text("QA.TEST.1") button').click();
+  await page.locator("#evalOverview").getByText("QA.TEST.1").waitFor();
   let criterionData = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
-  assert.ok(!criterionData.criteria.some(x => x.code === "QA.TEST.1"), "El criterio personalizado debe poder eliminarse");
+  assert.ok(criterionData.criteria.some(x => x.code === "QA.TEST.1"), "El criterio personalizado debe incorporarse a la valoración del ciclo correspondiente");
 
   await page.locator("#registerEvidencePanel > summary").click();
   await page.locator('#gradeForm input[name="student"]').fill("QA-01");
