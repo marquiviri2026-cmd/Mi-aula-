@@ -28,6 +28,19 @@ try {
   await page.waitForSelector("#page-inicio");
   assert.match(await page.title(), /MI AULA/i);
 
+  const manifestResponse = await page.request.get(base + "/manifest.webmanifest");
+  assert.equal(manifestResponse.status(), 200, "El manifiesto PWA debe responder HTTP 200");
+  const manifest = await manifestResponse.json();
+  assert.equal(manifest.name, "MI AULA · Espacio docente");
+  assert.equal(manifest.display, "standalone", "La PWA debe poder abrirse como aplicación independiente");
+  assert.ok(manifest.icons?.some(icon => icon.src === "/icon.svg"), "El manifiesto debe declarar el icono de la app");
+  assert.equal(await page.locator('meta[name="apple-mobile-web-app-capable"]').getAttribute("content"), "yes", "Debe incluir soporte de instalación iOS");
+  assert.equal(await page.locator('link[rel="apple-touch-icon"]').count(), 1, "Debe declarar icono de pantalla de inicio para iOS");
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  const swResponse = await page.request.get(base + "/sw.js");
+  assert.equal(swResponse.status(), 200, "El service worker debe responder HTTP 200");
+  assert.match(swResponse.headers()["content-type"] || "", /javascript/i, "El service worker debe servirse como JavaScript");
+
   const sections = ["inicio", "horario", "agenda", "grupos", "programacion", "evaluacion", "biblioteca", "asistente", "ajustes"];
   for (const section of sections) {
     await page.locator('[data-page="' + section + '"]').click();
@@ -179,8 +192,14 @@ try {
   const mobileWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   assert.ok(mobileWidth <= 390, "La página no debe desbordarse horizontalmente en móvil; ancho: " + mobileWidth);
 
+  await page.context().setOffline(true);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.locator("#page-inicio").waitFor({ state: "visible" });
+  assert.match(await page.title(), /MI AULA/i, "La aplicación debe abrir su estructura básica sin conexión");
+  await page.context().setOffline(false);
+
   assert.deepEqual(pageErrors, [], "No deben producirse errores JavaScript no controlados: " + pageErrors.join(" | "));
-  console.log("E2E OK: carga, navegación de 9 módulos, catálogo, 6 comprobaciones API seguras, alta/guardado/recarga/borrado de agenda y grupos, persistencia de programación y evaluación, exportación/restauración JSON y vista móvil.");
+  console.log("E2E OK: carga, navegación de 9 módulos, catálogo, 6 comprobaciones API seguras, alta/guardado/recarga/borrado de agenda y grupos, persistencia de programación y evaluación, exportación/restauración JSON y vista móvil, manifiesto PWA, metadatos iOS y carga offline del shell.");
 } finally {
   await browser.close();
 }
