@@ -83,6 +83,26 @@ try {
   await page.locator("#groupsList").getByRole("button", { name: "Eliminar" }).first().click();
   await page.locator("#groupsList").getByText("QA · grupo temporal").waitFor({ state: "detached" });
 
+  await page.locator('[data-page="horario"]').click();
+  await page.locator('#scheduleTable td[onclick*="Martes"][onclick*="09:00"]').click();
+  let scheduleData = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
+  assert.ok(!scheduleData.slots.some(x => x.day === "Martes" && x.start === "09:00"), "La eliminación de una clase debe guardarse");
+  await page.getByRole("button", { name: /Añadir clase/ }).click();
+  await page.locator('#slotForm select[name="day"]').selectOption("Martes");
+  await page.locator('#slotForm input[name="start"]').fill("09:00");
+  await page.locator('#slotForm input[name="end"]').fill("10:00");
+  await page.locator('#slotForm input[name="subject"]').fill("QA · clase temporal");
+  await page.locator('#slotForm input[name="group"]').fill("Grupo de prueba");
+  await page.locator('#slotForm button.btn.primary').click();
+  await page.locator("#scheduleTable").getByText("QA · clase temporal").waitFor();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  scheduleData = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
+  assert.ok(scheduleData.slots.some(x => x.subject === "QA · clase temporal"), "La clase debe persistir tras recargar");
+  await page.locator('[data-page="horario"]').click();
+  await page.locator('#scheduleTable td[onclick*="Martes"][onclick*="09:00"]').click();
+  scheduleData = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
+  assert.ok(!scheduleData.slots.some(x => x.subject === "QA · clase temporal"), "La clase temporal debe poder eliminarse");
+
   await page.locator('[data-page="programacion"]').click();
   await page.getByRole("button", { name: /Nueva planificación/ }).click();
   await page.locator('#planForm input[name="title"]').fill("QA · planificación temporal");
@@ -98,6 +118,20 @@ try {
   assert.ok(saved.plans.some(x => x.title === "QA · planificación temporal"), "La programación debe persistir tras recargar");
 
   await page.locator('[data-page="evaluacion"]').click();
+  await page.locator("#criteriaReferencePanel > summary").click();
+  await page.locator('#criterionForm input[name="code"]').fill("QA.TEST.1");
+  await page.locator('#criterionForm select[name="grade"]').selectOption("4.º");
+  await page.locator('#criterionForm select[name="subject"]').selectOption("Matemáticas");
+  await page.locator('#criterionForm textarea[name="description"]').fill("Criterio temporal para prueba automatizada.");
+  await page.locator('#criterionForm input[name="weight"]').fill("10");
+  await page.locator('#criterionForm button.btn.primary').click();
+  await page.locator("#evalGroup").selectOption("4.º Primaria");
+  await page.locator("#evalSubject").selectOption("Matemáticas");
+  await page.locator("#criteriaList").getByText("QA.TEST.1").waitFor();
+  await page.locator('#criteriaList .rowitem:has-text("QA.TEST.1") button').click();
+  let criterionData = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
+  assert.ok(!criterionData.criteria.some(x => x.code === "QA.TEST.1"), "El criterio personalizado debe poder eliminarse");
+
   await page.locator("#registerEvidencePanel > summary").click();
   await page.locator('#gradeForm input[name="student"]').fill("QA-01");
   await page.locator('#gradeForm select[name="group"]').selectOption("4.º, 5.º y 6.º Primaria");
@@ -119,6 +153,14 @@ try {
   assert.match(download.suggestedFilename(), /\.json$/i, "La copia de seguridad debe descargarse como JSON");
 
   const backup = await page.evaluate(() => localStorage.getItem("miaula_v3_data"));
+  await page.locator('[data-page="evaluacion"]').click();
+  await page.locator("#historyGroup").selectOption("5.º y 6.º Primaria");
+  await page.locator("#historySubject").selectOption("Matemáticas");
+  await page.locator("#historyTerm").selectOption("1.º trimestre");
+  await page.locator("#evalStudentSearch").fill("QA-01");
+  await page.locator("#gradesList").getByRole("button").click();
+  let afterDelete = await page.evaluate(() => JSON.parse(localStorage.getItem("miaula_v3_data") || "{}"));
+  assert.ok(!afterDelete.grades.some(x => x.student === "QA-01"), "La evidencia debe poder eliminarse desde el historial");
   await page.evaluate(() => { const d = JSON.parse(localStorage.getItem("miaula_v3_data")); d.events = []; d.plans = []; d.grades = []; localStorage.setItem("miaula_v3_data", JSON.stringify(d)); });
   await page.locator("#importInput").setInputFiles({
     name: "mi-aula-prueba.json",
