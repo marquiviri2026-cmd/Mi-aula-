@@ -1,3 +1,4 @@
+import { findLibraryStore } from "../lib/vector-store.js";
 const MAX_QUERY = 1000;
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","X-Content-Type-Options":"nosniff"}})}
 async function equalSecret(a,b){if(!a||!b||a.length!==b.length)return false;const e=new TextEncoder();const [x,y]=await Promise.all([crypto.subtle.digest("SHA-256",e.encode(a)),crypto.subtle.digest("SHA-256",e.encode(b))]);const A=new Uint8Array(x),B=new Uint8Array(y);let d=0;for(let i=0;i<A.length;i++)d|=A[i]^B[i];return d===0}
@@ -10,12 +11,12 @@ export async function onRequestPost({request,env}){
   if(!supplied)return json({error:"Introduce el código privado."},400);
   if(!(await equalSecret(supplied,env.MIAULA_ACCESS_TOKEN)))return json({error:"El código privado no coincide."},401);
   if(!env.OPENAI_API_KEY)return json({error:"Falta OPENAI_API_KEY."},503);
-  if(!env.OPENAI_VECTOR_STORE_ID)return json({error:"La biblioteca todavía no está configurada."},503);
+  let store;try{store=await findLibraryStore(env)}catch(e){return json({error:e.message},502)}if(!store)return json({error:"No se ha encontrado una biblioteca MI AULA."},503);
   let body;try{body=await request.json()}catch{return json({error:"Petición no válida."},400)}
   const query=typeof body.query==="string"?body.query.trim():"";
   if(!query)return json({error:"Escribe qué quieres buscar."},400);
   if(query.length>MAX_QUERY)return json({error:"La búsqueda supera los 1.000 caracteres."},413);
-  let upstream;try{upstream=await openai(env,"/vector_stores/"+encodeURIComponent(env.OPENAI_VECTOR_STORE_ID)+"/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query,max_num_results:8})})}catch{return json({error:"No se pudo conectar con la biblioteca."},502)}
+  let upstream;try{upstream=await openai(env,"/vector_stores/"+encodeURIComponent(store.id)+"/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query,max_num_results:8})})}catch{return json({error:"No se pudo conectar con la biblioteca."},502)}
   const raw=await upstream.text();let result;try{result=JSON.parse(raw)}catch{result={}};
   if(!upstream.ok)return json({error:(result.error?.message||"OpenAI no pudo completar la búsqueda.").slice(0,400)},502);
   const data=Array.isArray(result.data)?result.data:[];
