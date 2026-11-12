@@ -434,7 +434,8 @@ runCompetencyAssessment.addEventListener('click',async()=>{
  if(!student){competencyStatus.textContent='Introduce el código anónimo del alumno.';return}
  if(!token){competencyStatus.textContent='Introduce el código privado en el apartado Asistente IA.';return}
  const storedGroup=group==='1.º y 2.º Primaria'?'1.º y 2.º Primaria':group==='4.º Primaria'?'4.º Primaria':'5.º y 6.º Primaria';
- const groupAliases=group==='1.º y 2.º Primaria'?['1.º y 2.º Primaria','1.º','2.º']:group==='4.º Primaria'?['4.º Primaria','4.º','4.º, 5.º y 6.º Primaria']:['5.º y 6.º Primaria','5.º','6.º','4.º, 5.º y 6.º Primaria'];\n const records=(data.grades||[]).filter(x=>String(x.student||'').trim().toLowerCase()===student.toLowerCase()&&groupAliases.includes(x.group)&&x.subject===subject&&x.term===term);
+ const groupAliases=group==='1.º y 2.º Primaria'?['1.º y 2.º Primaria','1.º','2.º']:group==='4.º Primaria'?['4.º Primaria','4.º','4.º, 5.º y 6.º Primaria']:['5.º y 6.º Primaria','5.º','6.º','4.º, 5.º y 6.º Primaria'];
+ const records=(data.grades||[]).filter(x=>String(x.student||'').trim().toLowerCase()===student.toLowerCase()&&groupAliases.includes(x.group)&&x.subject===subject&&x.term===term);
  if(!records.length){competencyStatus.textContent='No hay evidencias guardadas para este alumno, materia y trimestre.';return}
  runCompetencyAssessment.disabled=true;runCompetencyAssessment.textContent='Analizando historial…';competencyStatus.textContent='La IA está relacionando '+records.length+' evidencia(s) con el currículo oficial.';
  try{
