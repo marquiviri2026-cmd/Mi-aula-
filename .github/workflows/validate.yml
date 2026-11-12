@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - preparacion/asistente-openai
+      - feature/examenes-notificaciones
   pull_request:
     branches:
       - main
