@@ -1,5 +1,5 @@
 const CACHE_NAME = "mi-aula-shell-v1";
-const SHELL = ["/", "/manifest.webmanifest", "/icon.svg"];
+const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/criterios-extremadura.json"];
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
