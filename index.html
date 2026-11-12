@@ -352,7 +352,7 @@ async function fetchCloudData(){const r=await fetch('/api/sync',{credentials:'sa
 async function pushCloudData(){if(!cloudReady||syncBusy)return;syncBusy=true;const generation=syncGeneration;try{const r=await fetch('/api/sync',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:localSnapshot(),revision:syncRevision})});let j={};try{j=await r.json()}catch{}if(r.status===409){cloudReady=false;showSyncStatus('Conflicto: hay cambios en otro dispositivo. Recarga antes de continuar.');return}if(!r.ok)throw new Error(j.error||'Error al sincronizar.');syncRevision=j.revision;showSyncStatus('Sincronizado · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}))}catch(e){showSyncStatus('Guardado local; sincronización pendiente: '+e.message)}finally{syncBusy=false;if(cloudReady&&syncGeneration!==generation)queueCloudSync()}}
 function queueCloudSync(){if(!cloudReady)return;syncGeneration++;clearTimeout(syncTimer);syncTimer=setTimeout(pushCloudData,900)}
 function showSyncStatus(message){const node=document.getElementById('syncStatus');if(node)node.textContent=message}
-async function activateAccount(){const cloud=await fetchCloudData();if(cloud.data){localBackup();data={...BASE,...cloud.data};syncRevision=cloud.revision||0;try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){console.warn('No se pudo actualizar la copia local',e)}}else{localBackup();syncRevision=0;const r=await fetch('/api/sync',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:localSnapshot(),revision:0})});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'No se pudo iniciar la sincronización.');syncRevision=j.revision||1}cloudReady=true;document.body.classList.add('miaula-authenticated');authGate.hidden=true;const main=document.querySelector('main.main'),sidebar=document.getElementById('sidebar');if(main)main.style.visibility='visible';if(sidebar)sidebar.style.visibility='visible';for(const key of ['events','exams','slots','groups','plans','grades','files','criteria','competencyAssessments'])if(!Array.isArray(data[key]))data[key]=Array.isArray(BASE[key])?structuredClone(BASE[key]):[];try{renderAll();showSyncStatus('Google conectado · sincronización activa')}catch(e){console.error('MI_AULA_RENDER_AFTER_LOGIN',e);const home=document.getElementById('page-inicio');document.querySelectorAll('main.main .page').forEach(p=>p.classList.remove('active'));if(home){home.classList.add('active');home.innerHTML='<div class="card"><h2>MI AULA</h2><p>La cuenta está conectada, pero un módulo no se ha podido cargar.</p><p id="miAulaRenderError" role="alert"></p><button class="btn primary" type="button" onclick="location.reload()">Volver a cargar</button></div>';const detail=document.getElementById('miAulaRenderError');if(detail)detail.textContent='Detalle técnico: '+(e?.message||'error de renderizado')}showSyncStatus('Cuenta conectada · error al cargar un módulo');}}
+async function activateAccount(){const cloud=await fetchCloudData();if(cloud.data){localBackup();data={...BASE,...cloud.data};syncRevision=cloud.revision||0;try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){console.warn('No se pudo actualizar la copia local',e)}}else{localBackup();syncRevision=0;const r=await fetch('/api/sync',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:localSnapshot(),revision:0})});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'No se pudo iniciar la sincronización.');syncRevision=j.revision||1}cloudReady=true;document.body.classList.add('miaula-authenticated');authGate.hidden=true;const main=document.querySelector('main.main'),sidebar=document.getElementById('sidebar');if(main)main.style.visibility='visible';if(sidebar)sidebar.style.visibility='visible';for(const key of ['events','exams','slots','groups','plans','grades','files','criteria','competencyAssessments'])if(!Array.isArray(data[key]))data[key]=Array.isArray(BASE[key])?structuredClone(BASE[key]):[];try{renderAll();showSyncStatus('Google conectado · sincronización activa');refreshPushStatus()}catch(e){console.error('MI_AULA_RENDER_AFTER_LOGIN',e);const home=document.getElementById('page-inicio');document.querySelectorAll('main.main .page').forEach(p=>p.classList.remove('active'));if(home){home.classList.add('active');home.innerHTML='<div class="card"><h2>MI AULA</h2><p>La cuenta está conectada, pero un módulo no se ha podido cargar.</p><p id="miAulaRenderError" role="alert"></p><button class="btn primary" type="button" onclick="location.reload()">Volver a cargar</button></div>';const detail=document.getElementById('miAulaRenderError');if(detail)detail.textContent='Detalle técnico: '+(e?.message||'error de renderizado')}showSyncStatus('Cuenta conectada · error al cargar un módulo');}}
 async function handleGoogleCredential(response){const button=document.getElementById('googleButton');if(button)button.style.opacity='.6';authStatus.textContent='Verificando identidad…';try{const result=await authRequest('/api/auth/google',{credential:response.credential});currentAccount=result.user;await activateAccount()}catch(error){authStatus.textContent=error.message}finally{if(button)button.style.opacity='1'}}
 let googleInitAttempts=0;
 function initializeGoogleIdentity(){
@@ -427,6 +427,40 @@ function recordExamResult(examId,form){
  save();form.reset();alert('Resultado guardado y vinculado a Evaluación.');
 }
 function base64UrlToBytes(value){const padding='='.repeat((4-value.length%4)%4);const base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(base64),c=>c.charCodeAt(0))}
+async function refreshPushStatus(){
+ const button=document.getElementById('enablePushButton'),status=document.getElementById('pushStatus');
+ if(!button||!status)return;
+ if(typeof Notification==='undefined'||!('serviceWorker' in navigator)||!('PushManager' in window)){
+  status.textContent='Este dispositivo o modo de navegación no permite comprobar las notificaciones Push.';
+  return;
+ }
+ if(Notification.permission!=='granted'){
+  status.textContent=Notification.permission==='denied'?'Las notificaciones están bloqueadas en los ajustes del dispositivo.':'Notificaciones todavía no activadas en este dispositivo.';
+  button.textContent='Activar notificaciones';
+  return;
+ }
+ try{
+  const reg=await navigator.serviceWorker.ready;
+  const subscription=await reg.pushManager.getSubscription();
+  if(!subscription){
+   status.textContent='El permiso del sistema está concedido, pero falta registrar este dispositivo. Pulsa «Activar notificaciones».';
+   button.textContent='Completar activación';
+   return;
+  }
+  if(!currentAccount){
+   status.textContent='Permiso y suscripción detectados. Inicia sesión para vincular este dispositivo a tu cuenta.';
+   return;
+  }
+  const response=await fetch('/api/push/subscribe',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:subscription.toJSON()})});
+  const result=await response.json();
+  if(!response.ok)throw new Error(result.error||'No se pudo verificar el registro en el servidor.');
+  status.textContent='✓ Notificaciones activadas en este dispositivo. La suscripción se ha comprobado al abrir MI AULA.';
+  button.textContent='Notificaciones activadas';
+ }catch(error){
+  status.textContent='Permiso concedido, pero no se pudo comprobar el registro Push: '+(error?.message||'error desconocido');
+  button.textContent='Reintentar comprobación';
+ }
+}
 async function enablePushNotifications(){
  const button=document.getElementById('enablePushButton'),status=document.getElementById('pushStatus');
  const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
