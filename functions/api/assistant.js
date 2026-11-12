@@ -1,3 +1,4 @@
+import { findLibraryStore } from "../lib/vector-store.js";
 const MAX_BODY = 24000;
 const MAX_PROMPT = 12000;
 const MAX_HISTORY = 8;
@@ -74,8 +75,11 @@ export async function onRequestPost({ request, env }) {
     max_output_tokens: 2600,
     store: false
   };
-  if (env.OPENAI_VECTOR_STORE_ID) {
-    payload.tools = [{ type:"file_search", vector_store_ids:[env.OPENAI_VECTOR_STORE_ID], max_num_results:6 }];
+  let libraryStore = null;
+  try { libraryStore = await findLibraryStore(env); }
+  catch (error) { return json({ error: "No se pudo comprobar la biblioteca documental: " + String(error.message || error).slice(0,250) }, 502); }
+  if (libraryStore) {
+    payload.tools = [{ type:"file_search", vector_store_ids:[libraryStore.id], max_num_results:6 }];
     payload.include = ["file_search_call.results"];
   }
   let upstream;
@@ -101,6 +105,6 @@ export async function onRequestPost({ request, env }) {
     }
   }
   if(!answer) return json({error:"La IA no ha devuelto texto. Reformula la consulta."},502);
-  return json({answer,sources,library_connected:!!env.OPENAI_VECTOR_STORE_ID,model:result.model||env.OPENAI_MODEL||"gpt-4.1-mini"});
+  return json({answer,sources,library_connected:!!libraryStore,model:result.model||env.OPENAI_MODEL||"gpt-4.1-mini"});
 }
 export async function onRequestGet(){return json({error:"Método no permitido."},405);}
