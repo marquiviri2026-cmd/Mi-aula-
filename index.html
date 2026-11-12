@@ -214,6 +214,15 @@ body{background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMa
 /* Acceso privado y sincronización */
 #authGate{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:linear-gradient(145deg,#14243b,#243f69)}
 #authGate[hidden]{display:none!important}.auth-card{width:min(440px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 25px 80px #07152a66}.auth-card h1{margin:0 0 7px;color:#1d2d46;font-size:25px}.auth-card p{color:#718096;font-size:13px;line-height:1.55}.auth-card .field{margin:14px 0}.auth-card .field input{width:100%;padding:12px;border:1px solid #dfe5ef;border-radius:10px}.auth-card .auth-status{min-height:22px;font-size:12px;color:#a43d3d;margin-top:12px}.auth-card .auth-switch{border:0;background:none;color:#315fc5;text-decoration:underline;padding:8px 0;cursor:pointer;font-size:12px}.auth-userbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.auth-userbar small{color:var(--muted)}body:not(.miaula-authenticated) .sidebar,body:not(.miaula-authenticated) .main,body:not(.miaula-authenticated) .mobilebar,body:not(.miaula-authenticated) .scrim{visibility:hidden}
+
+/* Cierre rápido de paneles desplegables */
+details{position:relative}
+.details-close{position:absolute;z-index:5;top:8px;right:10px;width:30px;height:30px;display:grid;place-items:center;border:1px solid #e2e7ef;border-radius:9px;background:#fff;color:#64748b;font-size:21px;line-height:1;font-weight:500;cursor:pointer;box-shadow:0 2px 7px #17243a12}
+.details-close:hover{background:#fff1f1;border-color:#f0caca;color:#b42332}
+#page-evaluacion details.card[open]>summary{padding-right:76px}
+.course-program[open]>summary,.subject-program[open]>summary,.plan-detail[open]>summary,.unit-detail[open]>summary{padding-right:76px}
+#librarySearchResults{position:relative}
+.library-results-close{position:absolute;right:8px;top:8px;z-index:4}
 </style></head><body>
 <div id="authGate"><div class="auth-card"><div style="font-size:11px;letter-spacing:2px;color:#3867d6;font-weight:800;margin-bottom:12px">MI AULA · ESPACIO DOCENTE</div><h1 style="margin:0 0 7px;color:#1d2d46;font-size:25px">MI AULA</h1><p style="color:#718096;font-size:13px;line-height:1.55">Identifícate con tu cuenta de Google para acceder a tus datos sincronizados.</p><div id="googleButton" style="display:flex;justify-content:center;min-height:44px;margin:22px 0 8px"></div><div class="auth-status" id="authStatus" role="status" aria-live="polite"></div></div></div>
 <div class="scrim" id="scrim" onclick="toggleMenu(false)"></div><aside class="sidebar" id="sidebar"><div class="brand">MI AULA</div><div class="tagline">TU ESPACIO DOCENTE</div><nav class="nav" id="nav"><div class="nav-label">ESPACIO DE TRABAJO</div>
@@ -771,5 +780,27 @@ document.getElementById('logoutButton')?.addEventListener('click',async()=>{if(!
       alert('Para instalar MI AULA:\n\nAbre el menú del navegador (⋮ en Chrome o … en Edge) y selecciona «Instalar MI AULA» o «Aplicaciones > Instalar este sitio como una aplicación».');
     }
   });
+})();
+
+/* Botón X para cerrar cualquier desplegable abierto */
+(function installDetailsCloseButtons(){
+ function addClose(details){
+  if(!(details instanceof HTMLDetailsElement)||!details.open||details.querySelector(':scope > .details-close'))return;
+  const button=document.createElement('button');button.type='button';button.className='details-close';button.textContent='×';button.setAttribute('aria-label','Cerrar desplegable');button.title='Cerrar';
+  button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();details.open=false;button.remove()});
+  details.append(button);
+ }
+ document.querySelectorAll('details[open]').forEach(addClose);
+ document.addEventListener('toggle',event=>{if(event.target instanceof HTMLDetailsElement){if(event.target.open)addClose(event.target);else event.target.querySelector(':scope > .details-close')?.remove()}},true);
+ // Los resultados de búsqueda de libros también se pueden plegar con una X.
+ const results=document.getElementById('librarySearchResults');
+ if(results){
+  const addResultsClose=()=>{
+   if(!results.textContent.trim()||results.querySelector(':scope > .library-results-close'))return;
+   const button=document.createElement('button');button.type='button';button.className='details-close library-results-close';button.textContent='×';button.setAttribute('aria-label','Cerrar resultados de búsqueda');button.title='Cerrar resultados';
+   button.addEventListener('click',()=>{results.replaceChildren();const status=document.getElementById('librarySearchStatus');if(status)status.textContent='Resultados cerrados.'});results.append(button);
+  };
+  new MutationObserver(addResultsClose).observe(results,{childList:true,subtree:true,characterData:true});addResultsClose();
+ }
 })();
 </script></body></html>
