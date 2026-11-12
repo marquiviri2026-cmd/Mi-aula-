@@ -425,7 +425,12 @@ function recordExamResult(examId,form){
 function base64UrlToBytes(value){const padding='='.repeat((4-value.length%4)%4);const base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(base64),c=>c.charCodeAt(0))}
 async function enablePushNotifications(){
  const button=document.getElementById('enablePushButton'),status=document.getElementById('pushStatus');
- if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){status.textContent='Este navegador o modo de apertura no admite notificaciones Push. En iPhone, abre MI AULA desde el icono de la pantalla de inicio.';return}
+ const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
+ const isInstalled=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+ if(isIOS&&!isInstalled){status.textContent='En iPhone, abre MI AULA desde el icono añadido a la pantalla de inicio. No funciona desde una pestaña de Safari.';return}
+ if(!window.isSecureContext||!('serviceWorker' in navigator)){status.textContent='Este acceso no permite Service Workers. Abre MI AULA desde su dirección segura https://mi-aula.pages.dev o desde el icono instalado.';return}
+ if(!('PushManager' in window)){status.textContent='Este dispositivo no ofrece la API Push en este modo. En iPhone, comprueba que MI AULA está instalada en la pantalla de inicio y que iOS está actualizado (16.4 o posterior).';return}
+ if(typeof Notification==='undefined'||typeof Notification.requestPermission!=='function'){status.textContent='El sistema de notificaciones no está disponible en este modo. En iPhone, cierra MI AULA y vuelve a abrirla desde su icono de la pantalla de inicio.';return}
  if(!currentAccount){status.textContent='Inicia sesión antes de activar las notificaciones.';return}
  button.disabled=true;status.textContent='Solicitando permiso de notificaciones…';
  try{
@@ -645,7 +650,7 @@ document.getElementById('logoutButton')?.addEventListener('click',async()=>{if(!
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(error => console.warn('MI AULA: no se pudo activar el modo sin conexión.', error));
+      navigator.serviceWorker.register('/sw.js').then(reg => reg.update()).catch(error => console.warn('MI AULA: no se pudo actualizar el modo sin conexión.', error));
     });
   }
 
