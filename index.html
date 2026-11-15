@@ -383,7 +383,7 @@ function addUnitContent(event,planId,unitNumber){
  unit.addedContents.push(value);
  save();
  const next=document.getElementById('unit-content-'+planId+'-'+unitNumber);
- if(next)next.focus();
+ if(next){let parent=next.closest('details');while(parent){parent.open=true;parent=parent.parentElement.closest('details')}next.focus();}
 }
 function currentEval(){return {group:evalGroup.value,subject:evalSubject.value,term:evalTerm.value}}
 function getCriteria(){const group=evalGroup.value;const cycle=group==='1.º y 2.º Primaria'?'Primer ciclo':group==='4.º Primaria'?'Segundo ciclo':'Tercer ciclo';const aliases=cycle==='Primer ciclo'?['Primer ciclo','1.º ciclo','1.º','2.º','1.º y 2.º Primaria']:cycle==='Segundo ciclo'?['Segundo ciclo','2.º ciclo','4.º','4.º Primaria']:['Tercer ciclo','3.º ciclo','5.º','6.º','5.º y 6.º Primaria'];return (data.criteria||[]).filter(c=>c.subject===evalSubject.value&&aliases.includes(c.grade))}
