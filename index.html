@@ -509,7 +509,7 @@ function del(col,id){if(confirm('¿Eliminar este registro?')){data[col]=data[col
  const aliases={'1.º':['1.º Primaria','1.º y 2.º Primaria'],'2.º':['2.º Primaria','1.º y 2.º Primaria'],'4.º':['4.º Primaria','4.º, 5.º y 6.º Primaria'],'5.º':['5.º Primaria','4.º, 5.º y 6.º Primaria'],'6.º':['6.º Primaria','4.º, 5.º y 6.º Primaria']};
  const valid=aliases[grade]||[group.name,grade];
  const plans=(data.plans||[]).filter(p=>p.subject===subject&&(valid.includes(p.group)||p.group===group.name));
- const units=plans.flatMap(p=>(p.units||[]).map(u=>({id:String(p.id)+'-'+String(u.number??u.id??u.title),title:'UD '+(u.number??'')+' · '+(u.title||'Unidad'),source:p.title})));
+ const units=plans.flatMap(p=>(p.units||[]).map(u=>({id:String(p.id)+'-'+String(u.number??u.id??u.title),title:'UD '+(u.number??''),source:p.title})));
  return units.length?units:plans.map(p=>({id:String(p.id),title:p.title,source:p.title}));
 }
 function reviewNoteFor(groupId,grade,student,subject,topicId){
@@ -554,7 +554,7 @@ function renderGroups(){
    const matches=all.filter(p=>(aliases[course]||[course]).includes(p.group)&&p.subject===subject&&(p.group===course||!all.some(q=>q.group===course&&q.subject===subject)));
    if(!matches.length)return '';
    const cards=matches.map(x=>{
-    const body=x.units?'<div class="unit-list">'+x.units.map(u=>'<details class="unit-detail"><summary>UD '+u.number+' · '+esc(u.title)+'</summary><div class="unit-body"><p>'+esc(u.content)+'</p><b>Reto / producto final</b><p>'+esc(u.challenge)+'</p></div></details>').join('')+'</div>':'<div class="timeline-detail">'+esc(x.notes||'')+'</div>';
+    const body=x.units?'<div class="unit-list">'+x.units.map(u=>'<details class="unit-detail"><summary>UD '+u.number+'</summary><div class="unit-body"><p>'+esc(u.content)+'</p><b>Reto / producto final</b><p>'+esc(u.challenge)+'</p></div></details>').join('')+'</div>':'<div class="timeline-detail">'+esc(x.notes||'')+'</div>';
     return '<details class="plan-detail"><summary><div><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.period||'Programación anual')+' · '+esc(x.status||'En curso')+'</div><div class="helper">Abrir programación detallada</div></div></summary><div class="plan-content">'+body+'</div><div class="plan-actions"><span class="muted">'+esc(x.status||'En curso')+'</span><button class="btn small danger" onclick="event.preventDefault();del(\'plans\','+x.id+')">Eliminar</button></div></details>';
    }).join('');
    return cards?'<details class="subject-program"><summary><b>'+esc(subject)+'</b><span class="muted">'+matches.length+' programación(es)</span></summary><div class="subject-program-body">'+cards+'</div></details>':'';
